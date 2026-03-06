@@ -62,7 +62,8 @@ $Strings = @{
     CatProd          = if ($IsPT) { "Produtividade" } else { "Prod" }
     CatSys           = if ($IsPT) { "Sistema" } else { "Sys" }
     
-    AdvCoremakerOnly = if ($IsPT) { "Avançado (Coremaker)" } else { "Advanced (Coremaker)" }
+    AdvCoremakerOnly = if ($IsPT) { "Avançado" } else { "Advanced" }
+    AdvCoremakerTip  = if ($IsPT) { "Opções exclusivas do Coremaker. Utilize apenas para testes e desenvolvimento." } else { "Coremaker exclusive options. Use only for testing and development." }
     OptDefender      = if ($IsPT) { "Remover Windows Defender" } else { "Remove Windows Defender" }
     OptWinUpdate     = if ($IsPT) { "Desativar Windows Update" } else { "Disable Windows Update" }
     OptWinRE         = if ($IsPT) { "Remover Windows Recovery (WinRE)" } else { "Remove Windows Recovery (WinRE)" }
@@ -165,26 +166,26 @@ $Global:AppPackages = @(
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="$($Strings.WindowTitle)" Height="750" Width="850"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen" Background="#1E1E2E" Foreground="#CDD6F4"
-        FontFamily="Segoe UI, Inter, Roboto, sans-serif">
+        WindowStartupLocation="CenterScreen" Background="#202020" Foreground="#FFFFFF"
+        FontFamily="Segoe UI Variable, Segoe UI, sans-serif">
     <Window.Resources>
-        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="FontSize" Value="14"/></Style>
+        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#FFFFFF"/><Setter Property="FontSize" Value="14"/></Style>
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#89B4FA"/><Setter Property="Foreground" Value="#11111B"/>
+            <Setter Property="Background" Value="#0078D4"/><Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Padding" Value="15,8"/>
             <Setter Property="BorderThickness" Value="0"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" CornerRadius="6"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border></ControlTemplate>
+                    <ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" CornerRadius="4"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border></ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#B4BEFE"/></Trigger>
-                <Trigger Property="IsEnabled" Value="False"><Setter Property="Background" Value="#45475A"/><Setter Property="Foreground" Value="#A6ADC8"/></Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#1A8CD8"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter Property="Background" Value="#404040"/><Setter Property="Foreground" Value="#808080"/></Trigger>
             </Style.Triggers>
         </Style>
-        <Style TargetType="TextBox"><Setter Property="Background" Value="#313244"/><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="BorderBrush" Value="#45475A"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="8"/><Setter Property="FontSize" Value="14"/></Style>
-        <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="FontSize" Value="14"/><Setter Property="Margin" Value="0,5,0,0"/><Setter Property="Cursor" Value="Hand"/><Style.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35"/><Setter Property="Cursor" Value="Arrow"/></Trigger></Style.Triggers></Style>
+        <Style TargetType="TextBox"><Setter Property="Background" Value="#2D2D2D"/><Setter Property="Foreground" Value="#FFFFFF"/><Setter Property="BorderBrush" Value="#383838"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="8"/><Setter Property="FontSize" Value="14"/></Style>
+        <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#FFFFFF"/><Setter Property="FontSize" Value="13"/><Setter Property="Margin" Value="0,4,0,0"/><Setter Property="Cursor" Value="Hand"/><Style.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35"/><Setter Property="Cursor" Value="Arrow"/></Trigger></Style.Triggers></Style>
     </Window.Resources>
     <Grid Margin="30">
         <Grid.RowDefinitions>
@@ -194,10 +195,10 @@ $Global:AppPackages = @(
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Grid.Row="0" Margin="0,0,0,15" Padding="0,0,0,10" BorderBrush="#45475A" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Margin="0,0,0,15" Padding="0,0,0,10" BorderBrush="#383838" BorderThickness="0,0,0,1">
             <StackPanel HorizontalAlignment="Center">
-                <TextBlock Text="$($Strings.WindowTitle)" FontSize="28" FontWeight="Bold" Foreground="#89B4FA" HorizontalAlignment="Center"/>
-                <TextBlock Text="$($Strings.Subtitle)" Foreground="#A6ADC8" Margin="0,5,0,0" HorizontalAlignment="Center"/>
+                <TextBlock Text="$($Strings.WindowTitle)" FontSize="26" FontWeight="Bold" Foreground="#60CDFF" HorizontalAlignment="Center"/>
+                <TextBlock Text="$($Strings.Subtitle)" Foreground="#9E9E9E" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="13"/>
             </StackPanel>
         </Border>
         <Grid Grid.Row="1" Margin="0,0,0,15">
@@ -211,21 +212,21 @@ $Global:AppPackages = @(
             </Grid.ColumnDefinitions>
             
             <TextBlock Grid.Column="0" Text="$($Strings.BackendScript)" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <ComboBox Name="ComboScript" Grid.Column="1" Width="150" HorizontalAlignment="Left" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14" Margin="0,0,15,0">
+            <ComboBox Name="ComboScript" Grid.Column="1" Width="150" HorizontalAlignment="Left" Background="#2D2D2D" Foreground="#11111B" Padding="5" FontSize="13" Margin="0,0,15,0">
                 <ComboBoxItem Content="tiny11maker.ps1" IsSelected="True"/>
                 <ComboBoxItem Content="tiny11Coremaker.ps1"/>
             </ComboBox>
 
             <TextBlock Grid.Column="2" Text="$($Strings.SourceDrive)" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <ComboBox Name="ComboDrives" Grid.Column="3" Width="60" HorizontalAlignment="Left" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14" Margin="0,0,15,0"/>
+            <ComboBox Name="ComboDrives" Grid.Column="3" Width="60" HorizontalAlignment="Left" Background="#2D2D2D" Foreground="#11111B" Padding="5" FontSize="13" Margin="0,0,15,0"/>
             
             <TextBlock Grid.Column="4" Text="$($Strings.VersionIndex)" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <ComboBox Name="ComboIndex" Grid.Column="5" HorizontalAlignment="Stretch" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14"/>
+            <ComboBox Name="ComboIndex" Grid.Column="5" MinWidth="120" MaxWidth="320" HorizontalAlignment="Left" Background="#2D2D2D" Foreground="#11111B" Padding="5" FontSize="13"/>
         </Grid>
         <Grid Grid.Row="2" Margin="0,0,0,15">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <StackPanel Name="PanelCategories" Grid.Column="0" Margin="0,0,15,0">
-                <TextBlock Text="$($Strings.Categories)" FontWeight="Bold" Foreground="#F38BA8" Margin="0,0,0,10"/>
+                <TextBlock Text="$($Strings.Categories)" FontWeight="Bold" Foreground="#60CDFF" Margin="0,0,0,10"/>
                 <CheckBox Name="ChkCatAds" Content="$($Strings.CatAds)" IsChecked="True"/>
                 <CheckBox Name="ChkCatComms" Content="$($Strings.CatComms)" IsChecked="True"/>
                 <CheckBox Name="ChkCatDev" Content="$($Strings.CatDev)" IsChecked="True"/>
@@ -235,18 +236,18 @@ $Global:AppPackages = @(
                 <CheckBox Name="ChkCatProd" Content="$($Strings.CatProd)" IsChecked="True"/>
                 <CheckBox Name="ChkCatSys" Content="$($Strings.CatSys)" IsChecked="True"/>
                 
-                <Button Name="BtnListaBloatware" Content="$($Strings.BtnAppCustom)" ToolTip="$($Strings.AdvHint)" Width="190" HorizontalAlignment="Left" Margin="0,15,0,0" Background="#313244" Foreground="#CDD6F4" Padding="10,5"/>
+                <Button Name="BtnListaBloatware" Content="$($Strings.BtnAppCustom)" ToolTip="$($Strings.AdvHint)" Width="190" HorizontalAlignment="Left" Margin="0,15,0,0" Background="#2D2D2D" Foreground="#FFFFFF" Padding="10,5"/>
             </StackPanel>
             <StackPanel Grid.Column="1">
                 <StackPanel Name="PanelSysSettings">
-                    <TextBlock Text="$($Strings.SysSettings)" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,0,10"/>
+                    <TextBlock Text="$($Strings.SysSettings)" FontWeight="Bold" Foreground="#6CCB5F" Margin="0,0,0,10"/>
                     <CheckBox Name="ChkBypassReqs" Content="$($Strings.OptBypass)" IsChecked="True"/>
                     <CheckBox Name="ChkDisableTelemetry" Content="$($Strings.OptTelemetry)" IsChecked="True"/>
                     <CheckBox Name="ChkLocalAccount" Content="$($Strings.OptLocalAccount)" IsChecked="True"/>
                 </StackPanel>
                 
                 <StackPanel Name="PanelAdvSettings" Margin="0,20,0,0">
-                    <TextBlock Text="$($Strings.AdvCoremakerOnly)" FontWeight="Bold" Foreground="#EBA0AC" Margin="0,0,0,10"/>
+                    <TextBlock Text="$($Strings.AdvCoremakerOnly)" FontWeight="Bold" Foreground="#FFAA44" Margin="0,0,0,10" ToolTip="$($Strings.AdvCoremakerTip)"/>
                     <CheckBox Name="ChkRemoveDefender" Content="$($Strings.OptDefender)" IsChecked="False" IsEnabled="False"/>
                     <CheckBox Name="ChkDisableUpdate" Content="$($Strings.OptWinUpdate)" IsChecked="False" IsEnabled="False"/>
                     <CheckBox Name="ChkRemoveWinRE" Content="$($Strings.OptWinRE)" IsChecked="False" IsEnabled="False"/>
@@ -257,10 +258,10 @@ $Global:AppPackages = @(
         <Grid Grid.Row="3" Margin="0,0,0,15">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <TextBlock Text="$($Strings.ConsoleTitle)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-            <TextBox Name="LogBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Background="#181825" Foreground="#A6E3A1" FontFamily="Consolas" VerticalScrollBarVisibility="Auto"/>
+            <TextBox Name="LogBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Background="#0C0C0C" Foreground="#00CC6A" FontFamily="Cascadia Mono, Consolas" FontSize="12" VerticalScrollBarVisibility="Auto" BorderBrush="#383838"/>
         </Grid>
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="BtnClear" Background="#F38BA8" Content="$($Strings.BtnClear)" Width="220" Margin="0,0,20,0"/>
+            <Button Name="BtnClear" Background="#FF4343" Content="$($Strings.BtnClear)" Width="220" Margin="0,0,20,0"/>
             <Button Name="BtnStart" Content="$($Strings.BtnStart)" Width="220"/>
         </StackPanel>
     </Grid>
@@ -498,20 +499,73 @@ $BtnStart.Add_Click({
 
             Write-Log "Build Engine: $TargetScript"
             
-            $psArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\$TargetScript`" $scriptArgs"
+            $scriptFullPath = Join-Path $ScriptDir $TargetScript
+            $psArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptFullPath`" $scriptArgs"
             try {
                 $BtnStart.IsEnabled = $false
-                Start-Process powershell.exe -ArgumentList $psArgs -Verb RunAs
+
+                $psi = New-Object System.Diagnostics.ProcessStartInfo
+                $psi.FileName = "powershell.exe"
+                $psi.Arguments = $psArgs
+                $psi.UseShellExecute = $false
+                $psi.RedirectStandardOutput = $true
+                $psi.RedirectStandardError = $true
+                $psi.CreateNoWindow = $true
+
+                $script:BuildProcess = New-Object System.Diagnostics.Process
+                $script:BuildProcess.StartInfo = $psi
+                $script:BuildProcess.EnableRaisingEvents = $true
+
+                $script:BuildProcess.add_OutputDataReceived({
+                        param($s, $e)
+                        if ($e.Data) {
+                            $Window.Dispatcher.Invoke([Action] {
+                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                    $LogBox.AppendText("[$timestamp] $($e.Data)`r`n")
+                                    $LogBox.ScrollToEnd()
+                                })
+                        }
+                    })
+
+                $script:BuildProcess.add_ErrorDataReceived({
+                        param($s, $e)
+                        if ($e.Data) {
+                            $Window.Dispatcher.Invoke([Action] {
+                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                    $LogBox.AppendText("[$timestamp] [!] $($e.Data)`r`n")
+                                    $LogBox.ScrollToEnd()
+                                })
+                        }
+                    })
+
+                $script:BuildProcess.add_Exited({
+                        $Window.Dispatcher.Invoke([Action] {
+                                $code = $script:BuildProcess.ExitCode
+                                $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                if ($code -eq 0) {
+                                    $LogBox.AppendText("[$timestamp] [OK] $($Strings.MsgSuccess)`r`n")
+                                }
+                                else {
+                                    $LogBox.AppendText("[$timestamp] [FAIL] Exit code: $code`r`n")
+                                }
+                                $LogBox.ScrollToEnd()
+                                $BtnStart.IsEnabled = $true
+                            })
+                    })
+
+                $script:BuildProcess.Start() | Out-Null
+                $script:BuildProcess.BeginOutputReadLine()
+                $script:BuildProcess.BeginErrorReadLine()
                 Write-Log $Strings.MsgSuccess
             }
             catch {
                 Write-Log "[ERRO/ERROR] $TargetScript failed to start: $_"
+                $BtnStart.IsEnabled = $true
             }
         }
         else {
             Write-Log $Strings.MsgNoImage
         }
-        $BtnStart.IsEnabled = $true
     })
 
 $Window.Add_Loaded({ Write-Log $Strings.MsgGuiInit; Get-MountedDrives })
