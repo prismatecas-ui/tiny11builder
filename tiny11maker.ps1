@@ -56,11 +56,12 @@ trap {
 }
 
 if (-not $SCRATCH) {
-    $ScratchDisk = $PSScriptRoot -replace '[\\]+$', ''
+    $ScratchDisk = Join-Path ($PSScriptRoot -replace '[\\]+$', '') "build"
 }
 else {
-    $ScratchDisk = $SCRATCH + ":"
+    $ScratchDisk = Join-Path ($SCRATCH + ":") "build"
 }
+if (-not (Test-Path $ScratchDisk)) { New-Item -ItemType Directory -Force -Path $ScratchDisk | Out-Null }
 
 #---------[ Functions ]---------#
 function Set-RegistryValue {
@@ -126,7 +127,7 @@ if (-not (Test-Path -Path "$PSScriptRoot/autounattend.xml")) {
 }
 
 # Start the transcript and prepare the window
-Start-Transcript -Path "$PSScriptRoot\tiny11_$(get-date -f yyyyMMdd_HHmms).log"
+Start-Transcript -Path "$ScratchDisk\tiny11_$(get-date -f yyyyMMdd_HHmmss).log"
 
 $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 Clear-Host
@@ -215,6 +216,9 @@ if (Test-Path "$ScratchDisk\scratchdir") {
 New-Item -ItemType Directory -Force -Path "$ScratchDisk\scratchdir" > $null
 
 Mount-WindowsImage -ImagePath $ScratchDisk\tiny11\sources\install.wim -Index $index -Path $ScratchDisk\scratchdir
+
+Write-Output "Exporting list of all provisioned Appx packages..."
+Get-AppxProvisionedPackage -Path "$ScratchDisk\scratchdir" | Select-Object -ExpandProperty DisplayName | Sort-Object | Out-File -FilePath "$ScratchDisk\all_installed_apps.txt" -Encoding UTF8
 
 $imageIntl = & dism /English /Get-Intl "/Image:$($ScratchDisk)\scratchdir"
 $languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default system UI language : ([a-zA-Z]{2}-[a-zA-Z]{2})' }

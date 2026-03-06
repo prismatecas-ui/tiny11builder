@@ -355,8 +355,11 @@ $BtnStart.Add_Click({
         if (-not $ChkRemoveEdge.IsChecked) { $scriptArgs += " -KeepEdge" }
         if (-not $ChkRemoveOneDrive.IsChecked) { $scriptArgs += " -KeepOneDrive" }
 
+        $BuildDir = Join-Path $ScriptDir "build"
+        if (-not (Test-Path $BuildDir)) { New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null }
+        
         # Gerar Lista Física de AppsX
-        $removeFile = Join-Path $ScriptDir "apps_to_remove.txt"
+        $removeFile = Join-Path $BuildDir "apps_to_remove.txt"
         $Global:AppPackages | Where-Object { $_.Remove } | Select-Object -ExpandProperty Id | Out-File -FilePath $removeFile -Encoding UTF8
     
         $scriptArgs += " -AppListFile `"$removeFile`""
