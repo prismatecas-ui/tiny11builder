@@ -77,6 +77,7 @@ $Global:AppPackages = @(
     [PSCustomObject]@{ Id = 'Microsoft.WindowsAlarms'; Desc = 'Alarmes e Relogio'; Cat = 'Prod'; Remove = $false }
     [PSCustomObject]@{ Id = 'Microsoft.WindowsNotepad'; Desc = 'Bloco de Notas (Abas)'; Cat = 'Prod'; Remove = $false }
     [PSCustomObject]@{ Id = 'Microsoft.ScreenSketch'; Desc = 'Ferramenta de Captura'; Cat = 'Prod'; Remove = $false }
+    [PSCustomObject]@{ Id = 'Microsoft.Copilot'; Desc = 'Microsoft Copilot (Integrado)'; Cat = 'Prod'; Remove = $true }
 
     [PSCustomObject]@{ Id = 'King.Com.CandyCrushSaga'; Desc = 'Candy Crush Saga'; Cat = 'Ads'; Remove = $true }
     [PSCustomObject]@{ Id = 'Netflix'; Desc = 'Netflix Patrocinado'; Cat = 'Ads'; Remove = $true }
@@ -99,7 +100,7 @@ $Global:AppPackages = @(
 [xml]$XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Tiny11Builder UI - Premium" Height="750" Width="850"
+        Title="Tiny11 GUI Builder" Height="750" Width="850"
         WindowStartupLocation="CenterScreen" Background="#1E1E2E" Foreground="#CDD6F4"
         FontFamily="Segoe UI, Inter, Roboto, sans-serif">
     <Window.Resources>
@@ -132,7 +133,7 @@ $Global:AppPackages = @(
         <Border Grid.Row="0" Margin="0,0,0,15" Padding="0,0,0,10" BorderBrush="#45475A" BorderThickness="0,0,0,1">
             <StackPanel HorizontalAlignment="Center">
                 <TextBlock Text="Tiny11 GUI Builder" FontSize="28" FontWeight="Bold" Foreground="#89B4FA" HorizontalAlignment="Center"/>
-                <TextBlock Text="Selecione a ISO e configure precisamente o debloat do Windows 11." Foreground="#A6ADC8" Margin="0,5,0,0" HorizontalAlignment="Center"/>
+                <TextBlock Text="Construa uma ISO do Windows 11 leve, r&#225;pida e sob medida." Foreground="#A6ADC8" Margin="0,5,0,0" HorizontalAlignment="Center"/>
             </StackPanel>
         </Border>
         <Grid Grid.Row="1" Margin="0,0,0,15">
@@ -151,24 +152,19 @@ $Global:AppPackages = @(
         <Grid Grid.Row="2" Margin="0,0,0,15">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                <TextBlock Text="Categorias Mestre (Marcou, remove tudo dela)" FontWeight="Bold" Foreground="#F38BA8" Margin="0,0,0,10"/>
-                <CheckBox Name="ChkCatAds" Content="Remover Lixo Patrocinado (Spotify, Netflix)" IsChecked="True"/>
-                <CheckBox Name="ChkCatNews" Content="Remover Not&#237;cias, Bing e Clima" IsChecked="True"/>
-                <CheckBox Name="ChkCatGames" Content="Remover Integra&#231;&#227;o Xbox e Jogos" IsChecked="True"/>
-                <CheckBox Name="ChkCatMedia" Content="Remover M&#237;dia Menor (3DViewer, Clipchamp)" IsChecked="True"/>
-                <CheckBox Name="ChkCatComms" Content="Remover Comunica&#231;&#227;o (Teams, Skype, Mail)" IsChecked="True"/>
-                <CheckBox Name="ChkCatDev" Content="Remover DevTools (Terminal, DevHome)" IsChecked="True"/>
-                <TextBlock Text="Produtividade" FontWeight="SemiBold" Foreground="#F9E2AF" Margin="0,15,0,5"/>
-                <CheckBox Name="ChkCatProd" Content="Remover Utilit&#225;rios (Bloco, TODO)" IsChecked="False"/>
-                <CheckBox Name="ChkCatCalc" Content="Remover Calculadora Nativa" IsChecked="False"/>
-                <CheckBox Name="ChkCatPhotos" Content="Remover Visualizador de Fotos" IsChecked="False"/>
+                <TextBlock Text="Categorias" FontWeight="Bold" Foreground="#F38BA8" Margin="0,0,0,10"/>
+                <CheckBox Name="ChkCatAds" Content="Ads" IsChecked="True"/>
+                <CheckBox Name="ChkCatNews" Content="News" IsChecked="True"/>
+                <CheckBox Name="ChkCatGames" Content="Games" IsChecked="True"/>
+                <CheckBox Name="ChkCatMedia" Content="Media" IsChecked="True"/>
+                <CheckBox Name="ChkCatComms" Content="Comms" IsChecked="True"/>
+                <CheckBox Name="ChkCatDev" Content="Dev" IsChecked="True"/>
                 
-                <Button Name="BtnListaBloatware" Content="Ajustar Softwares 1 a 1..." Width="190" HorizontalAlignment="Left" Margin="0,15,0,0" Background="#313244" Foreground="#CDD6F4" Padding="10,5"/>
+                <Button Name="BtnListaBloatware" Content="Personaliza&#231;&#227;o de Apps" ToolTip="Escolha quais apps remover ou manter" Width="190" HorizontalAlignment="Left" Margin="0,15,0,0" Background="#313244" Foreground="#CDD6F4" Padding="10,5"/>
             </StackPanel>
             <StackPanel Grid.Column="1">
-                <TextBlock Text="Ajustes Finos do Sistema" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,0,10"/>
+                <TextBlock Text="Configura&#231;&#245;es do Sistema" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,0,10"/>
                 <CheckBox Name="ChkBypassReqs" Content="Bypass Requisitos CPU/RAM/TPM" IsChecked="True"/>
-                <CheckBox Name="ChkRemoveCopilot" Content="Remover Microsoft Copilot (Recomendado)" IsChecked="True"/>
                 <CheckBox Name="ChkRemoveEdge" Content="Remover Microsoft Edge (Navegador)" IsChecked="True"/>
                 <CheckBox Name="ChkRemoveOneDrive" Content="Remover OneDrive" IsChecked="True"/>
                 <CheckBox Name="ChkDisableTelemetry" Content="Desabilitar Telemetria MS" IsChecked="True"/>
@@ -199,7 +195,6 @@ $BtnClear = $Window.FindName("BtnClear")
 $LogBox = $Window.FindName("LogBox")
 $BtnListaBloatware = $Window.FindName("BtnListaBloatware")
 
-$ChkRemoveCopilot = $Window.FindName("ChkRemoveCopilot")
 $ChkRemoveEdge = $Window.FindName("ChkRemoveEdge")
 $ChkRemoveOneDrive = $Window.FindName("ChkRemoveOneDrive")
 
@@ -209,9 +204,6 @@ $ChkCatGames = $Window.FindName("ChkCatGames")
 $ChkCatMedia = $Window.FindName("ChkCatMedia")
 $ChkCatComms = $Window.FindName("ChkCatComms")
 $ChkCatDev = $Window.FindName("ChkCatDev")
-$ChkCatProd = $Window.FindName("ChkCatProd")
-$ChkCatCalc = $Window.FindName("ChkCatCalc")
-$ChkCatPhotos = $Window.FindName("ChkCatPhotos")
 
 # Helpers
 function Write-Log([string]$Message) {
@@ -280,9 +272,6 @@ $ChkCatGames.Add_Click({ Sync-CategoryToGlobal 'Games' $ChkCatGames.IsChecked })
 $ChkCatMedia.Add_Click({ Sync-CategoryToGlobal 'Media' $ChkCatMedia.IsChecked })
 $ChkCatComms.Add_Click({ Sync-CategoryToGlobal 'Comms' $ChkCatComms.IsChecked })
 $ChkCatDev.Add_Click({ Sync-CategoryToGlobal 'Dev' $ChkCatDev.IsChecked })
-$ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
-$ChkCatCalc.Add_Click({ Sync-CategoryToGlobal 'Calc' $ChkCatCalc.IsChecked })
-$ChkCatPhotos.Add_Click({ Sync-CategoryToGlobal 'Photos' $ChkCatPhotos.IsChecked })
 
 $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
 
@@ -352,7 +341,7 @@ $BtnStart.Add_Click({
         $scriptArgs = "-ISO `"$isoDriveLetter`" -ImageIndex $imgIndex"
 
         # Checagens Extras/Básicas
-        if ($ChkRemoveCopilot.IsChecked) { $scriptArgs += " -RemoveCopilot" }
+        if ($Global:AppPackages | Where-Object { $_.Id -eq 'Microsoft.Copilot' -and $_.Remove }) { $scriptArgs += " -RemoveCopilot" }
         if (-not $ChkRemoveEdge.IsChecked) { $scriptArgs += " -KeepEdge" }
         if (-not $ChkRemoveOneDrive.IsChecked) { $scriptArgs += " -KeepOneDrive" }
 
