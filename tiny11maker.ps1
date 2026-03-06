@@ -34,8 +34,26 @@ param (
     [switch]$RemoveCopilot,
     [switch]$KeepEdge,
     [switch]$KeepOneDrive,
-    [string]$AppListFile
+    [string]$AppListFile,
+    [int]$ImageIndex = 1
 )
+
+$ErrorActionPreference = "Stop"
+
+trap {
+    Write-Host "`n========================================================" -ForegroundColor Red
+    Write-Host "[ERRO CRITICO] O script encontrou uma falha irreparável!" -ForegroundColor Red
+    Write-Host "Detalhes do erro:" -ForegroundColor Yellow
+    Write-Host $_.Exception.Message -ForegroundColor Yellow
+    Write-Host "========================================================`n" -ForegroundColor Red
+    
+    # Pausa a tela para depuração antes de fechar o console
+    Write-Host "Pressione qualquer tecla para sair..." -ForegroundColor Cyan
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    
+    # Sair do script garantindo que processos filhos morram se aplicável
+    exit 1
+}
 
 if (-not $SCRATCH) {
     $ScratchDisk = $PSScriptRoot -replace '[\\]+$', ''
@@ -132,15 +150,33 @@ else {
     exit
 }
 
+Write-Output "Copying Windows image..."
+# Movemos a cópia para ATES do Export-WindowsImage, assim o Export já salva na pasta final
+# e não precisa se preocupar com a etapa Copy-Item sobrescrevendo ou ignorando
+Copy-Item -Path "$DriveLetter\*" -Destination "$ScratchDisk\tiny11" -Recurse -Force | Out-Null
+Set-ItemProperty -Path "$ScratchDisk\tiny11\sources\install.esd" -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
+Remove-Item "$ScratchDisk\tiny11\sources\install.esd" -ErrorAction SilentlyContinue
+Write-Output "Copy complete!"
+Start-Sleep -Seconds 2
+
 if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$DriveLetter\sources\install.wim") -eq $false) {
     if ((Test-Path "$DriveLetter\sources\install.esd") -eq $true) {
         Write-Output "Found install.esd, converting to install.wim..."
         Get-WindowsImage -ImagePath $DriveLetter\sources\install.esd
-        $index = 1 # Usando index 1 por padrão para automação de GUI
-        Write-Output "Selecionado Index $index automaticamente."
+        $index = $ImageIndex
+        Write-Output "Selecionado Index $index."
         Write-Output ' '
         Write-Output 'Converting install.esd to install.wim. This may take a while...'
+        
+        # Remoção de WIM residual de execuções anteriores falhas
+        if (Test-Path "$ScratchDisk\tiny11\sources\install.wim") {
+            Remove-Item "$ScratchDisk\tiny11\sources\install.wim" -Force
+        }
+        
         Export-WindowsImage -SourceImagePath $DriveLetter\sources\install.esd -SourceIndex $index -DestinationImagePath $ScratchDisk\tiny11\sources\install.wim -Compressiontype Maximum -CheckIntegrity
+        
+        # Como o WIM exportado só terá UM index (a versão extraída), forçamos o index interno das próximas etapas para 1.
+        $ImageIndex = 1
     }
     else {
         Write-Output "Can't find Windows OS Installation files in the specified Drive Letter.."
@@ -149,17 +185,11 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
     }
 }
 
-Write-Output "Copying Windows image..."
-Copy-Item -Path "$DriveLetter\*" -Destination "$ScratchDisk\tiny11" -Recurse -Force | Out-Null
-Set-ItemProperty -Path "$ScratchDisk\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
-Remove-Item "$ScratchDisk\tiny11\sources\install.esd" > $null 2>&1
-Write-Output "Copy complete!"
-Start-Sleep -Seconds 2
 Clear-Host
 Write-Output "Getting image information:"
 $ImagesIndex = (Get-WindowsImage -ImagePath $ScratchDisk\tiny11\sources\install.wim).ImageIndex
-Write-Output "Selecionado Index 1 automaticamente."
-$index = 1
+Write-Output "Selecionado Index $ImageIndex."
+$index = $ImageIndex
 Write-Output "Mounting Windows image. This may take a while."
 $wimFilePath = "$ScratchDisk\tiny11\sources\install.wim"
 & takeown "/F" $wimFilePath
@@ -171,7 +201,21 @@ catch {
     # This block will catch the error and suppress it.
     Write-Error "$wimFilePath not found"
 }
+
+if (Test-Path "$ScratchDisk\scratchdir") {
+    Write-Host "Limpando diretorio de montagem (scratchdir) de execucoes anteriores..." -ForegroundColor Yellow
+    
+    # Force an explicit dismount in case the system locked the folder
+    Dismount-WindowsImage -Path "$ScratchDisk\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
+    
+    # Try DISM cleanup first in case there's a stale mount
+    & dism.exe /Cleanup-Mountpoints | Out-Null
+    & dism.exe /Cleanup-Wim | Out-Null
+    
+    Remove-Item -Path "$ScratchDisk\scratchdir" -Recurse -Force -ErrorAction SilentlyContinue
+}
 New-Item -ItemType Directory -Force -Path "$ScratchDisk\scratchdir" > $null
+
 Mount-WindowsImage -ImagePath $ScratchDisk\tiny11\sources\install.wim -Index $index -Path $ScratchDisk\scratchdir
 
 $imageIntl = & dism /English /Get-Intl "/Image:$($ScratchDisk)\scratchdir"
@@ -234,7 +278,8 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "*$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    & 'dism' '/English' "/image:$($ScratchDisk)\scratchdir" '/Remove-ProvisionedAppxPackage' "/PackageName:$package"
+    Write-Output "Removing App: $package"
+    & 'dism' '/English' "/image:$($ScratchDisk)\scratchdir" '/Remove-ProvisionedAppxPackage' "/PackageName:$package" | Out-Null
 }
 
 if (-not $KeepEdge) {

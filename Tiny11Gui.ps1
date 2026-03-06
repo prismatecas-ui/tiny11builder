@@ -127,9 +127,17 @@ $Global:AppPackages = @(
             </StackPanel>
         </Border>
         <Grid Grid.Row="1" Margin="0,0,0,15">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Drive de Origem (ISO Montada):" VerticalAlignment="Center" Margin="0,0,15,0" FontWeight="SemiBold"/>
-            <ComboBox Name="ComboDrives" Grid.Column="1" Width="100" HorizontalAlignment="Left" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Drive de Origem:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+            <ComboBox Name="ComboDrives" Grid.Column="1" Width="60" HorizontalAlignment="Left" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14" Margin="0,0,15,0"/>
+            
+            <TextBlock Grid.Column="2" Text="Vers&#227;o (Index):" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+            <ComboBox Name="ComboIndex" Grid.Column="3" HorizontalAlignment="Stretch" Background="#313244" Foreground="#11111B" Padding="5" FontSize="14"/>
         </Grid>
         <Grid Grid.Row="2" Margin="0,0,0,15">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -176,6 +184,7 @@ $Window = [Windows.Markup.XamlReader]::Load($Reader)
 
 # UI Elements
 $ComboDrives = $Window.FindName("ComboDrives")
+$ComboIndex = $Window.FindName("ComboIndex")
 $BtnStart = $Window.FindName("BtnStart")
 $BtnClear = $Window.FindName("BtnClear")
 $LogBox = $Window.FindName("LogBox")
@@ -206,42 +215,71 @@ function Write-Log([string]$Message) {
         })
 }
 
+function Load-ImageIndexes {
+    $ComboIndex.Items.Clear()
+    $selectedDrive = $ComboDrives.SelectedItem
+    if (-not $selectedDrive) { return }
+    
+    $wimPath = "$selectedDrive\sources\install.wim"
+    $esdPath = "$selectedDrive\sources\install.esd"
+    
+    $imagePath = $null
+    if (Test-Path $wimPath) { $imagePath = $wimPath }
+    elseif (Test-Path $esdPath) { $imagePath = $esdPath }
+    
+    if ($imagePath) {
+        try {
+            $images = Get-WindowsImage -ImagePath $imagePath -ErrorAction Stop
+            foreach ($img in $images) {
+                # Formato: "1 - Windows 11 Pro"
+                $ComboIndex.Items.Add("$($img.ImageIndex) - $($img.ImageName)") | Out-Null
+            }
+            if ($ComboIndex.Items.Count -gt 0) { $ComboIndex.SelectedIndex = 0 }
+        }
+        catch {
+            Write-Log "[ERRO] Leitura de Indexes falhou: $_"
+            $ComboIndex.Items.Add("1 - Desconhecido") | Out-Null
+            $ComboIndex.SelectedIndex = 0
+        }
+    }
+    else {
+        $ComboIndex.Items.Add([System.Net.WebUtility]::HtmlDecode("1 - Padr&#227;o")) | Out-Null
+        $ComboIndex.SelectedIndex = 0
+    }
+}
+
 function Get-MountedDrives {
     $drives = Get-Volume | Where-Object DriveLetter | Select-Object -ExpandProperty DriveLetter
     $ComboDrives.Items.Clear()
     foreach ($drive in $drives) { $ComboDrives.Items.Add("$drive`:") | Out-Null }
-    if ($ComboDrives.Items.Count -gt 0) { $ComboDrives.SelectedIndex = 0 }
+    if ($ComboDrives.Items.Count -gt 0) { 
+        $ComboDrives.SelectedIndex = 0 
+        Load-ImageIndexes
+    }
 }
 
+$ComboDrives.Add_SelectionChanged({ Load-ImageIndexes })
+
 # Master Sync (Main UI To Global Array)
-function Sync-CategoriesToGlobal {
-    $Global:AppPackages | Where-Object Cat -eq 'Ads' | ForEach-Object { $_.Remove = $ChkCatAds.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'News' | ForEach-Object { $_.Remove = $ChkCatNews.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Games' | ForEach-Object { $_.Remove = $ChkCatGames.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Media' | ForEach-Object { $_.Remove = $ChkCatMedia.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Comms' | ForEach-Object { $_.Remove = $ChkCatComms.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Dev' | ForEach-Object { $_.Remove = $ChkCatDev.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Prod' | ForEach-Object { $_.Remove = $ChkCatProd.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Calc' | ForEach-Object { $_.Remove = $ChkCatCalc.IsChecked }
-    $Global:AppPackages | Where-Object Cat -eq 'Photos' | ForEach-Object { $_.Remove = $ChkCatPhotos.IsChecked }
+function Sync-CategoryToGlobal($Cat, $State) {
+    $boolState = ($State -eq $true)
+    $Global:AppPackages | Where-Object Cat -eq $Cat | ForEach-Object { $_.Remove = $boolState }
 }
 
 # Events
-$ChkCatAds.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatNews.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatGames.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatMedia.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatComms.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatDev.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatProd.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatCalc.Add_Click({ Sync-CategoriesToGlobal })
-$ChkCatPhotos.Add_Click({ Sync-CategoriesToGlobal })
+$ChkCatAds.Add_Click({ Sync-CategoryToGlobal 'Ads' $ChkCatAds.IsChecked })
+$ChkCatNews.Add_Click({ Sync-CategoryToGlobal 'News' $ChkCatNews.IsChecked })
+$ChkCatGames.Add_Click({ Sync-CategoryToGlobal 'Games' $ChkCatGames.IsChecked })
+$ChkCatMedia.Add_Click({ Sync-CategoryToGlobal 'Media' $ChkCatMedia.IsChecked })
+$ChkCatComms.Add_Click({ Sync-CategoryToGlobal 'Comms' $ChkCatComms.IsChecked })
+$ChkCatDev.Add_Click({ Sync-CategoryToGlobal 'Dev' $ChkCatDev.IsChecked })
+$ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
+$ChkCatCalc.Add_Click({ Sync-CategoryToGlobal 'Calc' $ChkCatCalc.IsChecked })
+$ChkCatPhotos.Add_Click({ Sync-CategoryToGlobal 'Photos' $ChkCatPhotos.IsChecked })
 
 $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
 
 $BtnListaBloatware.Add_Click({
-        Sync-CategoriesToGlobal # Garante estado reflete o marcamento em massa
-
         $xamlAdv = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         Title="Controle Granular de Software" Height="650" Width="600"
@@ -268,38 +306,43 @@ $BtnListaBloatware.Add_Click({
         }
         $xamlAdv += @"
             </StackPanel>
-        </ScrollViewer>
+    </ScrollViewer>
         <Button Name="BtnSalvar" Grid.Row="2" Content="SALVAR E RETORNAR" Background="#89B4FA" Foreground="#11111B" Margin="15" Padding="10,10" FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
     </Grid>
 </Window>
 "@
-        $WinAdv = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader ([xml]$xamlAdv)))
-        $WinAdv.Owner = $Window
+        $script:WinAdv = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader ([xml]$xamlAdv)))
+        $script:WinAdv.Owner = $Window
     
-        $BtnSalvar = $WinAdv.FindName("BtnSalvar")
+        $BtnSalvar = $script:WinAdv.FindName("BtnSalvar")
         $BtnSalvar.Add_Click({
-                # Grava de volta na memória e reflete no painel principal?
+                # Grava de volta na memória e reflete no painel principal
                 foreach ($app in $Global:AppPackages) {
                     $cleanId = $app.Id -replace '\.', '_'
-                    $chkObj = $WinAdv.FindName("chk_$cleanId")
-                    if ($chkObj) { $app.Remove = $chkObj.IsChecked }
+                    $chkObj = $script:WinAdv.FindName("chk_$cleanId")
+                    if ($null -ne $chkObj) { $app.Remove = ($chkObj.IsChecked -eq $true) }
                 }
-                $WinAdv.Close()
-                Write-Log "[INFO] Configura&#231;&#245;es de lista individual atualizadas e salvas na sess&#227;o."
+                $script:WinAdv.Close()
+                Write-Log "[INFO] Configurações de lista individual atualizadas e salvas na sessão."
             })
-        $WinAdv.ShowDialog() | Out-Null
+        $script:WinAdv.ShowDialog() | Out-Null
     })
 
 $BtnStart.Add_Click({
         $selectedDrive = $ComboDrives.SelectedItem
         if (-not $selectedDrive) { Write-Log "[ERRO] Selecione um Drive."; return }
 
+        $imgIndex = 1
+        if ($ComboIndex.SelectedItem -match "^(\d+) -") {
+            $imgIndex = [int]$matches[1]
+        }
+
         # Sincroniza uma última vez caso o usuário não tenha clicado no avançado
         # Importante: Para não sobrescrever o Avançado, não chamamos 'Sync-CategoriesToGlobal' aqui
         # porque as Categories já se sincronizam pelo evento `Add_Click` delas na UI automaticamente.
 
         $isoDriveLetter = $selectedDrive.Substring(0, 1)
-        $scriptArgs = "-ISO `"$isoDriveLetter`""
+        $scriptArgs = "-ISO `"$isoDriveLetter`" -ImageIndex $imgIndex"
 
         # Checagens Extras/Básicas
         if ($ChkRemoveCopilot.IsChecked) { $scriptArgs += " -RemoveCopilot" }
@@ -314,8 +357,8 @@ $BtnStart.Add_Click({
 
         Write-Log "---------------------------------------------"
         Write-Log "Drive da ISO: $selectedDrive"
-        if (Test-Path "$selectedDrive\sources\install.wim" -or Test-Path "$selectedDrive\sources\install.esd") {
-            Write-Log "[OK] Base WIM instal&#225;vel encontrada. Repassando os ($($Global:AppPackages | Where-Object Remove | Measure-Object | Select-Object -ExpandProperty Count)) apps marcados para o background."
+        if ((Test-Path "$selectedDrive\sources\install.wim") -or (Test-Path "$selectedDrive\sources\install.esd")) {
+            Write-Log "[OK] Base WIM instalável encontrada. Repassando os ($($Global:AppPackages | Where-Object Remove | Measure-Object | Select-Object -ExpandProperty Count)) apps marcados para o background."
         
             $psArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\tiny11maker.ps1`" $scriptArgs"
             try {
