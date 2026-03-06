@@ -278,7 +278,7 @@ $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
 $BtnListaBloatware.Add_Click({
         $xamlAdv = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Controle Granular de Software" Height="650" Width="600"
+        Title="Controle de Apps" Height="650" Width="600"
         WindowStartupLocation="CenterOwner" Background="#11111B" Foreground="#CDD6F4"
         FontFamily="Segoe UI, Inter">
     <Window.Resources>
@@ -286,7 +286,7 @@ $BtnListaBloatware.Add_Click({
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <TextBlock Text="Desmarque qualquer app individual que deseje preservar na ISO. Marcar a caixa = Remover." Margin="15,15,15,10" Foreground="#A6E3A1" TextWrapping="Wrap" FontWeight="Bold"/>
+        <TextBlock Text="Desmarque os apps que deseja manter (Marcado = Remover)" Margin="15,15,15,10" Foreground="#A6E3A1" TextWrapping="Wrap" FontWeight="Bold"/>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="10,0">
             <StackPanel Name="ListPanel">
 "@
