@@ -42,16 +42,16 @@ $ErrorActionPreference = "Stop"
 
 trap {
     Write-Host "`n========================================================" -ForegroundColor Red
-    Write-Host "[ERRO CRITICO] O script encontrou uma falha irreparável!" -ForegroundColor Red
-    Write-Host "Detalhes do erro:" -ForegroundColor Yellow
+    Write-Host "[CRITICAL ERROR] The script encountered an unrecoverable failure!" -ForegroundColor Red
+    Write-Host "Error details:" -ForegroundColor Yellow
     Write-Host $_.Exception.Message -ForegroundColor Yellow
     Write-Host "========================================================`n" -ForegroundColor Red
     
-    # Pausa a tela para depuração antes de fechar o console
-    Write-Host "Pressione qualquer tecla para sair..." -ForegroundColor Cyan
+    # Pause for debugging before closing the console
+    Write-Host "Press any key to exit..." -ForegroundColor Cyan
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     
-    # Sair do script garantindo que processos filhos morram se aplicável
+    # Exit the script ensuring child processes are terminated if applicable
     exit 1
 }
 
@@ -136,7 +136,7 @@ Write-Output "Welcome to the tiny11 image creator! Release: 09-07-25"
 $hostArchitecture = $Env:PROCESSOR_ARCHITECTURE
 New-Item -ItemType Directory -Force -Path "$ScratchDisk\tiny11\sources" | Out-Null
 if (-not $ISO) {
-    Write-Output "Nenhum drive de imagem fornecido."
+    Write-Output "No image drive provided."
     exit
 }
 else {
@@ -152,8 +152,8 @@ else {
 }
 
 Write-Output "Copying Windows image..."
-# Movemos a cópia para ATES do Export-WindowsImage, assim o Export já salva na pasta final
-# e não precisa se preocupar com a etapa Copy-Item sobrescrevendo ou ignorando
+# We moved the copy BEFORE Export-WindowsImage so the Export saves directly to the final folder
+# and we don't need to worry about Copy-Item overwriting or skipping
 Copy-Item -Path "$DriveLetter\*" -Destination "$ScratchDisk\tiny11" -Recurse -Force | Out-Null
 Set-ItemProperty -Path "$ScratchDisk\tiny11\sources\install.esd" -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
 Remove-Item "$ScratchDisk\tiny11\sources\install.esd" -ErrorAction SilentlyContinue
@@ -165,18 +165,18 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
         Write-Output "Found install.esd, converting to install.wim..."
         Get-WindowsImage -ImagePath $DriveLetter\sources\install.esd
         $index = $ImageIndex
-        Write-Output "Selecionado Index $index."
+        Write-Output "Selected Index $index."
         Write-Output ' '
         Write-Output 'Converting install.esd to install.wim. This may take a while...'
         
-        # Remoção de WIM residual de execuções anteriores falhas
+        # Remove residual WIM from previous failed runs
         if (Test-Path "$ScratchDisk\tiny11\sources\install.wim") {
             Remove-Item "$ScratchDisk\tiny11\sources\install.wim" -Force
         }
         
         Export-WindowsImage -SourceImagePath $DriveLetter\sources\install.esd -SourceIndex $index -DestinationImagePath $ScratchDisk\tiny11\sources\install.wim -Compressiontype Maximum -CheckIntegrity
         
-        # Como o WIM exportado só terá UM index (a versão extraída), forçamos o index interno das próximas etapas para 1.
+        # Since the exported WIM will only have ONE index (the extracted version), we force the internal index for the next steps to 1.
         $ImageIndex = 1
     }
     else {
@@ -187,7 +187,7 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
 }
 
 Clear-Host
-Write-Output "Selecionado Index $ImageIndex."
+Write-Output "Selected Index $ImageIndex."
 $index = $ImageIndex
 Write-Output "Mounting Windows image. This may take a while."
 $wimFilePath = "$ScratchDisk\tiny11\sources\install.wim"
@@ -202,7 +202,7 @@ catch {
 }
 
 if (Test-Path "$ScratchDisk\scratchdir") {
-    Write-Host "Limpando diretorio de montagem (scratchdir) de execucoes anteriores..." -ForegroundColor Yellow
+    Write-Host "Cleaning up mount directory (scratchdir) from previous runs..." -ForegroundColor Yellow
     
     # Force an explicit dismount in case the system locked the folder
     Dismount-WindowsImage -Path "$ScratchDisk\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
@@ -262,15 +262,15 @@ ForEach-Object {
 $packagePrefixes = @()
 
 if ($AppListFile -and (Test-Path $AppListFile)) {
-    Write-Output "Carregando a lista customizada de aplicaticos UWP ($AppListFile)..."
+    Write-Output "Loading custom UWP app list ($AppListFile)..."
     $packagePrefixes = Get-Content $AppListFile -Encoding UTF8
 }
 else {
-    Write-Output "[AVISO] Nenhuma lista customizada encontrada. O sistema de exclusao pulara a etapa Appx."
+    Write-Output "[WARNING] No custom list found. The Appx exclusion step will be skipped."
 }
 
 if ($RemoveCopilot) {
-    Write-Output "Adicionando Copilot a lista de exclusao de pacotes.."
+    Write-Output "Adding Copilot to the package exclusion list..."
     $packagePrefixes += 'Microsoft.Copilot'
     $packagePrefixes += 'Microsoft.Windows.Copilot'
 }
@@ -354,11 +354,15 @@ Set-RegistryValue 'HKLM\zSYSTEM\ControlSet001\Control\BitLocker' 'PreventDeviceE
 Write-Output "Disabling Chat icon:"
 Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat' 'ChatIcon' 'REG_DWORD' '3'
 Set-RegistryValue 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarMn' 'REG_DWORD' '0'
-Write-Output "Removing Edge related registries"
-Remove-RegistryValue "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"
-Remove-RegistryValue "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update"
-Write-Output "Disabling OneDrive folder backup"
-Set-RegistryValue "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" "DisableFileSyncNGSC" "REG_DWORD" "1"
+if (-not $KeepEdge) {
+    Write-Output "Removing Edge related registries"
+    Remove-RegistryValue "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"
+    Remove-RegistryValue "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update"
+}
+if (-not $KeepOneDrive) {
+    Write-Output "Disabling OneDrive folder backup"
+    Set-RegistryValue "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" "DisableFileSyncNGSC" "REG_DWORD" "1"
+}
 Write-Output "Disabling Telemetry:"
 Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' 'Enabled' 'REG_DWORD' '0'
 Set-RegistryValue 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy' 'TailoredExperiencesWithDiagnosticDataEnabled' 'REG_DWORD' '0'
@@ -378,10 +382,12 @@ Set-RegistryValue 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate
 Remove-RegistryValue 'HKLM\zSOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate'
 Remove-RegistryValue 'HKLM\zSOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate'
 if ($RemoveCopilot) {
-    Write-Output "Disabling Copilot no Registro do Windows.."
+    Write-Output "Disabling Copilot in the Windows Registry..."
     Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsCopilot' 'TurnOffWindowsCopilot' 'REG_DWORD' '1'
 }
-Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Edge' 'HubsSidebarEnabled' 'REG_DWORD' '0'
+if (-not $KeepEdge) {
+    Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Edge' 'HubsSidebarEnabled' 'REG_DWORD' '0'
+}
 Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Explorer' 'DisableSearchBoxSuggestions' 'REG_DWORD' '1'
 Write-Output "Prevents installation of Teams:"
 Set-RegistryValue 'HKLM\zSOFTWARE\Policies\Microsoft\Teams' 'DisableInstallation' 'REG_DWORD' '1'
@@ -498,7 +504,7 @@ else {
 & "$OSCDIMG" '-m' '-o' '-u2' '-udfver102' "-bootdata:2#p0,e,b$ScratchDisk\tiny11\boot\etfsboot.com#pEF,e,b$ScratchDisk\tiny11\efi\microsoft\boot\efisys.bin" "$ScratchDisk\tiny11" "$ScratchDisk\tiny11.iso"
 
 # Finishing up
-Write-Output "Creation completed! Processo automatizado chegou ao fim."
+Write-Output "Creation completed! Automated process has finished."
 # Read-Host "Press Enter to continue"
 Write-Output "Performing Cleanup..."
 Remove-Item -Path "$ScratchDisk\tiny11" -Recurse -Force | Out-Null
