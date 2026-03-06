@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Interface gráfica para o Tiny11Builder.
 .DESCRIPTION
@@ -215,11 +215,9 @@ $ChkCatPhotos = $Window.FindName("ChkCatPhotos")
 
 # Helpers
 function Write-Log([string]$Message) {
-    # Suporte Nativo C# p/ Decode via HTML Entities independente do PS1 UTF8/ANSI
-    $Decoded = [System.Net.WebUtility]::HtmlDecode($Message)
     $LogBox.Dispatcher.Invoke([Action] {
             $timestamp = (Get-Date).ToString("HH:mm:ss")
-            $LogBox.AppendText("[$timestamp] $Decoded`r`n")
+            $LogBox.AppendText("[$timestamp] $Message`r`n")
             $LogBox.ScrollToEnd()
         })
 }
@@ -383,7 +381,7 @@ $BtnStart.Add_Click({
             }
         }
         else {
-            Write-Log "[!] WIM Inexistente. Tem certeza de que o drive selecionado &#233; da montagem da ISO?"
+            Write-Log "[!] WIM Inexistente. Tem certeza de que o drive selecionado é da montagem da ISO?"
         }
         $BtnStart.IsEnabled = $true
     })
