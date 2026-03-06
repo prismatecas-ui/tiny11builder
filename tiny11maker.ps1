@@ -186,8 +186,6 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
 }
 
 Clear-Host
-Write-Output "Getting image information:"
-$ImagesIndex = (Get-WindowsImage -ImagePath $ScratchDisk\tiny11\sources\install.wim).ImageIndex
 Write-Output "Selecionado Index $ImageIndex."
 $index = $ImageIndex
 Write-Output "Mounting Windows image. This may take a while."

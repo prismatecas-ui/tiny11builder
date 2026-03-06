@@ -8,6 +8,12 @@
 [CmdletBinding()]
 param()
 
+# Auto-Elevação (Garante que o script rode como Administrador)
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName PresentationFramework
@@ -215,7 +221,7 @@ function Write-Log([string]$Message) {
         })
 }
 
-function Load-ImageIndexes {
+function Get-ImageIndexes {
     $ComboIndex.Items.Clear()
     $selectedDrive = $ComboDrives.SelectedItem
     if (-not $selectedDrive) { return }
@@ -254,11 +260,11 @@ function Get-MountedDrives {
     foreach ($drive in $drives) { $ComboDrives.Items.Add("$drive`:") | Out-Null }
     if ($ComboDrives.Items.Count -gt 0) { 
         $ComboDrives.SelectedIndex = 0 
-        Load-ImageIndexes
+        Get-ImageIndexes
     }
 }
 
-$ComboDrives.Add_SelectionChanged({ Load-ImageIndexes })
+$ComboDrives.Add_SelectionChanged({ Get-ImageIndexes })
 
 # Master Sync (Main UI To Global Array)
 function Sync-CategoryToGlobal($Cat, $State) {
