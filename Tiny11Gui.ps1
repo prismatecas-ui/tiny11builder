@@ -184,7 +184,7 @@ $Global:AppPackages = @(
             </Style.Triggers>
         </Style>
         <Style TargetType="TextBox"><Setter Property="Background" Value="#313244"/><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="BorderBrush" Value="#45475A"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="8"/><Setter Property="FontSize" Value="14"/></Style>
-        <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="FontSize" Value="14"/><Setter Property="Margin" Value="0,5,0,0"/><Setter Property="Cursor" Value="Hand"/></Style>
+        <Style TargetType="CheckBox"><Setter Property="Foreground" Value="#CDD6F4"/><Setter Property="FontSize" Value="14"/><Setter Property="Margin" Value="0,5,0,0"/><Setter Property="Cursor" Value="Hand"/><Style.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35"/><Setter Property="Cursor" Value="Arrow"/></Trigger></Style.Triggers></Style>
     </Window.Resources>
     <Grid Margin="30">
         <Grid.RowDefinitions>
