@@ -164,6 +164,7 @@ $Global:AppPackages = @(
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="$($Strings.WindowTitle)" Height="750" Width="850"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen" Background="#1E1E2E" Foreground="#CDD6F4"
         FontFamily="Segoe UI, Inter, Roboto, sans-serif">
     <Window.Resources>
