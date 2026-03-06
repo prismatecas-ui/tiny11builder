@@ -29,38 +29,44 @@ $SysLang = [System.Globalization.CultureInfo]::CurrentUICulture.Name
 $IsPT = $SysLang -match '^pt'
 
 $Strings = @{
-    WindowTitle     = if ($IsPT) { "Tiny11 GUI Builder" } else { "Tiny11 GUI Builder" }
-    Subtitle        = if ($IsPT) { "Construa uma ISO do Windows 11 leve, rápida e sob medida." } else { "Build a lightweight, fast, custom Windows 11 ISO." }
-    SourceDrive     = if ($IsPT) { "Drive de Origem:" } else { "Source Drive:" }
-    VersionIndex    = if ($IsPT) { "Versão:" } else { "Version:" }
-    Categories      = if ($IsPT) { "Categorias" } else { "Categories" }
-    SysSettings     = if ($IsPT) { "Configurações Globais" } else { "Global Settings" }
-    OptBypass       = if ($IsPT) { "Bypass Requisitos CPU/RAM/TPM" } else { "Bypass CPU/RAM/TPM Requirements" }
-    OptTelemetry    = if ($IsPT) { "Desabilitar Telemetria MS" } else { "Disable MS Telemetry" }
-    OptLocalAccount = if ($IsPT) { "Forçar Conta Local (OOBE Offline)" } else { "Force Local Account (OOBE Offline)" }
-    BtnAppCustom    = if ($IsPT) { "Personalização de Apps" } else { "App Customization" }
-    ConsoleTitle    = if ($IsPT) { "Console de Processamento:" } else { "Processing Console:" }
-    BtnClear        = if ($IsPT) { "LIMPAR CONSOLE" } else { "CLEAR CONSOLE" }
-    BtnStart        = if ($IsPT) { "Otimizar ISO" } else { "Optimize ISO" }
-    AdvTitle        = if ($IsPT) { "Controle de Apps" } else { "App Control" }
-    AdvHint         = if ($IsPT) { "Desmarque os apps que deseja manter (Marcado = Remover)" } else { "Uncheck apps you want to keep (Checked = Remove)" }
-    AdvBtnSave      = if ($IsPT) { "SALVAR E RETORNAR" } else { "SAVE AND RETURN" }
-    AdvCategory     = if ($IsPT) { "Categoria:" } else { "Category:" }
-    MsgGuiInit      = if ($IsPT) { "[INFO] GUI Inicializada." } else { "[INFO] GUI Initialized." }
-    MsgNoDrive      = if ($IsPT) { "[ERRO] Selecione um Drive." } else { "[ERROR] Select a Drive." }
-    MsgSuccess      = if ($IsPT) { "[SUCESSO] Processo em andamento no console." } else { "[SUCCESS] Process running in console." }
-    MsgNoImage      = if ($IsPT) { "[!] Imagem WIM/ESD não encontrada." } else { "[!] WIM/ESD image not found." }
-    CbUnknown       = if ($IsPT) { "Desconhecido" } else { "Unknown" }
-    CbDefault       = if ($IsPT) { "Padrão" } else { "Default" }
-    BackendScript   = if ($IsPT) { "Script Base:" } else { "Build Script:" }
-    CatAds          = if ($IsPT) { "Anúncios" } else { "Ads" }
-    CatComms        = if ($IsPT) { "Comunicação" } else { "Comms" }
-    CatDev          = if ($IsPT) { "Desenvolvimento" } else { "Dev" }
-    CatGames        = if ($IsPT) { "Jogos" } else { "Games" }
-    CatMedia        = if ($IsPT) { "Mídia" } else { "Media" }
-    CatNews         = if ($IsPT) { "Notícias" } else { "News" }
-    CatProd         = if ($IsPT) { "Produtividade" } else { "Prod" }
-    CatSys          = if ($IsPT) { "Sistema" } else { "Sys" }
+    WindowTitle      = if ($IsPT) { "Tiny11 GUI Builder" } else { "Tiny11 GUI Builder" }
+    Subtitle         = if ($IsPT) { "Construa uma ISO do Windows 11 leve, rápida e sob medida." } else { "Build a lightweight, fast, custom Windows 11 ISO." }
+    SourceDrive      = if ($IsPT) { "Drive de Origem:" } else { "Source Drive:" }
+    VersionIndex     = if ($IsPT) { "Versão:" } else { "Version:" }
+    Categories       = if ($IsPT) { "Categorias" } else { "Categories" }
+    SysSettings      = if ($IsPT) { "Configurações Globais" } else { "Global Settings" }
+    OptBypass        = if ($IsPT) { "Bypass Requisitos CPU/RAM/TPM" } else { "Bypass CPU/RAM/TPM Requirements" }
+    OptTelemetry     = if ($IsPT) { "Desabilitar Telemetria MS" } else { "Disable MS Telemetry" }
+    OptLocalAccount  = if ($IsPT) { "Forçar Conta Local (OOBE Offline)" } else { "Force Local Account (OOBE Offline)" }
+    BtnAppCustom     = if ($IsPT) { "Personalização de Apps" } else { "App Customization" }
+    ConsoleTitle     = if ($IsPT) { "Console de Processamento:" } else { "Processing Console:" }
+    BtnClear         = if ($IsPT) { "LIMPAR CONSOLE" } else { "CLEAR CONSOLE" }
+    BtnStart         = if ($IsPT) { "Otimizar ISO" } else { "Optimize ISO" }
+    AdvTitle         = if ($IsPT) { "Controle de Apps" } else { "App Control" }
+    AdvHint          = if ($IsPT) { "Desmarque os apps que deseja manter (Marcado = Remover)" } else { "Uncheck apps you want to keep (Checked = Remove)" }
+    AdvBtnSave       = if ($IsPT) { "SALVAR E RETORNAR" } else { "SAVE AND RETURN" }
+    AdvCategory      = if ($IsPT) { "Categoria:" } else { "Category:" }
+    MsgGuiInit       = if ($IsPT) { "[INFO] GUI Inicializada." } else { "[INFO] GUI Initialized." }
+    MsgNoDrive       = if ($IsPT) { "[ERRO] Selecione um Drive." } else { "[ERROR] Select a Drive." }
+    MsgSuccess       = if ($IsPT) { "[SUCESSO] Processo em andamento no console." } else { "[SUCCESS] Process running in console." }
+    MsgNoImage       = if ($IsPT) { "[!] Imagem WIM/ESD não encontrada." } else { "[!] WIM/ESD image not found." }
+    CbUnknown        = if ($IsPT) { "Desconhecido" } else { "Unknown" }
+    CbDefault        = if ($IsPT) { "Padrão" } else { "Default" }
+    BackendScript    = if ($IsPT) { "Script Base:" } else { "Build Script:" }
+    CatAds           = if ($IsPT) { "Anúncios" } else { "Ads" }
+    CatComms         = if ($IsPT) { "Comunicação" } else { "Comms" }
+    CatDev           = if ($IsPT) { "Desenvolvimento" } else { "Dev" }
+    CatGames         = if ($IsPT) { "Jogos" } else { "Games" }
+    CatMedia         = if ($IsPT) { "Mídia" } else { "Media" }
+    CatNews          = if ($IsPT) { "Notícias" } else { "News" }
+    CatProd          = if ($IsPT) { "Produtividade" } else { "Prod" }
+    CatSys           = if ($IsPT) { "Sistema" } else { "Sys" }
+    
+    AdvCoremakerOnly = if ($IsPT) { "Avançado (Coremaker)" } else { "Advanced (Coremaker)" }
+    OptDefender      = if ($IsPT) { "Remover Windows Defender" } else { "Remove Windows Defender" }
+    OptWinUpdate     = if ($IsPT) { "Desativar Windows Update" } else { "Disable Windows Update" }
+    OptWinRE         = if ($IsPT) { "Remover Windows Recovery (WinRE)" } else { "Remove Windows Recovery (WinRE)" }
+    OptSysExtras     = if ($IsPT) { "Remover Pacotes Extras (WordPad, etc)" } else { "Remove Extra Packages (WordPad, etc)" }
 }
 
 function Get-AppName {
@@ -230,11 +236,21 @@ $Global:AppPackages = @(
                 
                 <Button Name="BtnListaBloatware" Content="$($Strings.BtnAppCustom)" ToolTip="$($Strings.AdvHint)" Width="190" HorizontalAlignment="Left" Margin="0,15,0,0" Background="#313244" Foreground="#CDD6F4" Padding="10,5"/>
             </StackPanel>
-            <StackPanel Name="PanelSysSettings" Grid.Column="1">
-                <TextBlock Text="$($Strings.SysSettings)" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,0,10"/>
-                <CheckBox Name="ChkBypassReqs" Content="$($Strings.OptBypass)" IsChecked="True"/>
-                <CheckBox Name="ChkDisableTelemetry" Content="$($Strings.OptTelemetry)" IsChecked="True"/>
-                <CheckBox Name="ChkLocalAccount" Content="$($Strings.OptLocalAccount)" IsChecked="True"/>
+            <StackPanel Grid.Column="1">
+                <StackPanel Name="PanelSysSettings">
+                    <TextBlock Text="$($Strings.SysSettings)" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,0,0,10"/>
+                    <CheckBox Name="ChkBypassReqs" Content="$($Strings.OptBypass)" IsChecked="True"/>
+                    <CheckBox Name="ChkDisableTelemetry" Content="$($Strings.OptTelemetry)" IsChecked="True"/>
+                    <CheckBox Name="ChkLocalAccount" Content="$($Strings.OptLocalAccount)" IsChecked="True"/>
+                </StackPanel>
+                
+                <StackPanel Name="PanelAdvSettings" Margin="0,20,0,0">
+                    <TextBlock Text="$($Strings.AdvCoremakerOnly)" FontWeight="Bold" Foreground="#EBA0AC" Margin="0,0,0,10"/>
+                    <CheckBox Name="ChkRemoveDefender" Content="$($Strings.OptDefender)" IsChecked="False" IsEnabled="False"/>
+                    <CheckBox Name="ChkDisableUpdate" Content="$($Strings.OptWinUpdate)" IsChecked="False" IsEnabled="False"/>
+                    <CheckBox Name="ChkRemoveWinRE" Content="$($Strings.OptWinRE)" IsChecked="False" IsEnabled="False"/>
+                    <CheckBox Name="ChkRemoveExtras" Content="$($Strings.OptSysExtras)" IsChecked="False" IsEnabled="False"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="3" Margin="0,0,0,15">
@@ -271,6 +287,11 @@ $ChkCatDev = $Window.FindName("ChkCatDev")
 $ChkCatSys = $Window.FindName("ChkCatSys")
 $ChkCatProd = $Window.FindName("ChkCatProd")
 
+$ChkRemoveDefender = $Window.FindName("ChkRemoveDefender")
+$ChkDisableUpdate = $Window.FindName("ChkDisableUpdate")
+$ChkRemoveWinRE = $Window.FindName("ChkRemoveWinRE")
+$ChkRemoveExtras = $Window.FindName("ChkRemoveExtras")
+
 # Sort UI Checkboxes Alphabetically based on Language
 $PanelCategories = $Window.FindName("PanelCategories")
 if ($PanelCategories) {
@@ -287,6 +308,15 @@ if ($PanelSysSettings) {
     foreach ($chk in $sysCheckboxes) {
         $PanelSysSettings.Children.Remove($chk) | Out-Null
         $PanelSysSettings.Children.Add($chk) | Out-Null
+    }
+}
+
+$PanelAdvSettings = $Window.FindName("PanelAdvSettings")
+if ($PanelAdvSettings) {
+    $advCheckboxes = @($PanelAdvSettings.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | Sort-Object Content)
+    foreach ($chk in $advCheckboxes) {
+        $PanelAdvSettings.Children.Remove($chk) | Out-Null
+        $PanelAdvSettings.Children.Add($chk) | Out-Null
     }
 }
 
@@ -348,6 +378,14 @@ function Get-MountedDrives {
 }
 
 $ComboDrives.Add_SelectionChanged({ Get-ImageIndexes })
+
+$ComboScript.Add_SelectionChanged({
+        $isCoremaker = ($ComboScript.SelectedItem.Content -match "tiny11Coremaker.ps1")
+        $ChkRemoveDefender.IsEnabled = $isCoremaker
+        $ChkDisableUpdate.IsEnabled = $isCoremaker
+        $ChkRemoveWinRE.IsEnabled = $isCoremaker
+        $ChkRemoveExtras.IsEnabled = $isCoremaker
+    })
 
 # Master Sync (Main UI To Global Array)
 function Sync-CategoryToGlobal($Cat, $State) {
@@ -432,6 +470,14 @@ $BtnStart.Add_Click({
         if ($Global:AppPackages | Where-Object { $_.Id -eq 'Microsoft.Copilot' -and $_.Remove }) { $scriptArgs += " -RemoveCopilot" }
         if ($Global:AppPackages | Where-Object { $_.Id -eq 'MicrosoftEdge' -and $_.Remove -eq $false }) { $scriptArgs += " -KeepEdge" }
         if ($Global:AppPackages | Where-Object { $_.Id -eq 'OneDriveSetup' -and $_.Remove -eq $false }) { $scriptArgs += " -KeepOneDrive" } # logic inverted for keep flag
+
+        $isCoremakerTarget = ($ComboScript.Text -match "tiny11Coremaker.ps1")
+        if ($isCoremakerTarget) {
+            if ($ChkRemoveDefender.IsChecked) { $scriptArgs += " -RemoveDefender" }
+            if ($ChkDisableUpdate.IsChecked) { $scriptArgs += " -DisableUpdate" }
+            if ($ChkRemoveWinRE.IsChecked) { $scriptArgs += " -RemoveWinRE" }
+            if ($ChkRemoveExtras.IsChecked) { $scriptArgs += " -RemoveExtras" }
+        }
 
         $BuildDir = Join-Path $ScriptDir "build"
         if (-not (Test-Path $BuildDir)) { New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null }

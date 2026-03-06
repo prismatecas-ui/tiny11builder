@@ -5,7 +5,11 @@
     [switch]$KeepEdge,
     [switch]$KeepOneDrive,
     [string]$AppListFile,
-    [int]$ImageIndex = 1
+    [int]$ImageIndex = 1,
+    [switch]$RemoveDefender,
+    [switch]$DisableUpdate,
+    [switch]$RemoveWinRE,
+    [switch]$RemoveExtras
 )
 
 $ErrorActionPreference = "Stop"
@@ -175,21 +179,28 @@ Start-Sleep -Seconds 1
 Clear-Host
 
 $scratchDir = "$($ScratchDisk)\scratchdir"
-$packagePatterns = @(
-    "Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35",
-    "Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64",
-    "Microsoft-Windows-LanguageFeatures-Handwriting-$languageCode-Package~31bf3856ad364e35",
-    "Microsoft-Windows-LanguageFeatures-OCR-$languageCode-Package~31bf3856ad364e35",
-    "Microsoft-Windows-LanguageFeatures-Speech-$languageCode-Package~31bf3856ad364e35",
-    "Microsoft-Windows-LanguageFeatures-TextToSpeech-$languageCode-Package~31bf3856ad364e35",
-    "Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35",
-    "Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35",
-    "Windows-Defender-Client-Package~31bf3856ad364e35~",
-    "Microsoft-Windows-WordPad-FoD-Package~",
-    "Microsoft-Windows-TabletPCMath-Package~",
-    "Microsoft-Windows-StepsRecorder-Package~"
+$packagePatterns = @()
+if ($RemoveExtras) {
+    Write-Host "Adding extra bloatware packages to removal list..."
+    $packagePatterns += @(
+        "Microsoft-Windows-InternetExplorer-Optional-Package~31bf3856ad364e35",
+        "Microsoft-Windows-Kernel-LA57-FoD-Package~31bf3856ad364e35~amd64",
+        "Microsoft-Windows-LanguageFeatures-Handwriting-$languageCode-Package~31bf3856ad364e35",
+        "Microsoft-Windows-LanguageFeatures-OCR-$languageCode-Package~31bf3856ad364e35",
+        "Microsoft-Windows-LanguageFeatures-Speech-$languageCode-Package~31bf3856ad364e35",
+        "Microsoft-Windows-LanguageFeatures-TextToSpeech-$languageCode-Package~31bf3856ad364e35",
+        "Microsoft-Windows-MediaPlayer-Package~31bf3856ad364e35",
+        "Microsoft-Windows-Wallpaper-Content-Extended-FoD-Package~31bf3856ad364e35",
+        "Microsoft-Windows-WordPad-FoD-Package~",
+        "Microsoft-Windows-TabletPCMath-Package~",
+        "Microsoft-Windows-StepsRecorder-Package~"
+    )
+}
 
-)
+if ($RemoveDefender) {
+    Write-Host "Adding Windows Defender to removal list..."
+    $packagePatterns += "Windows-Defender-Client-Package~31bf3856ad364e35~"
+}
 
 # Get all packages
 $allPackages = & dism /image:$scratchDir /Get-Packages /Format:Table
@@ -239,11 +250,13 @@ if ($architecture -eq 'amd64') {
 & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r'
 & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
 Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force
+if (`) {
 Write-Host "Removing WinRE"
 & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/r'
 & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/grant' 'Administrators:F' '/T' '/C'
 Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -Recurse -Force
 New-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -ItemType File -Force
+}
 if (-not $KeepOneDrive) { Write-Host "Removing OneDrive:"
 & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" >null
 & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' >null
@@ -467,6 +480,7 @@ Remove-Item -Path "$tasksPath\Microsoft\Windows\Chkdsk\Proxy" -Force -ErrorActio
 Remove-Item -Path "$tasksPath\Microsoft\Windows\Windows Error Reporting\QueueReporting" -Force -ErrorAction SilentlyContinue
 
 Write-Host "Task files have been deleted."
+if (`) {
 Write-Host "Disabling Windows Update..."
 & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE1' '/t' 'REG_SZ' '/d' 'net stop wuauserv' '/f'
 & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE2' '/t' 'REG_SZ' '/d' 'sc stop wuauserv' '/f'
@@ -477,7 +491,8 @@ Write-Host "Disabling Windows Update..."
 & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'DisableWindowsUpdateAccess' '/t' 'REG_DWORD' '/d' '1' '/f' 
 & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUServer' '/t' 'REG_SZ' '/d' 'localhost' '/f' 
 & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUStatusServer' '/t' 'REG_SZ' '/d' 'localhost' '/f' 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'UpdateServiceUrlAlternate' '/t' 'REG_SZ' '/d' 'localhost' '/f' 
+& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'UpdateServiceUrlAlternate' '/t' 'REG_SZ' '/d' 'localhost' '/f'
+} 
 & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' '/v' 'UseWUServer' '/t' 'REG_DWORD' '/d' '1' '/f' 
 & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'DisableOnline' '/t' 'REG_DWORD' '/d' '1' '/f' 
 & 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\wuauserv' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f' 
