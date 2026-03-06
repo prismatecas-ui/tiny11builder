@@ -55,6 +55,7 @@ $Global:AppPackages = @(
     [PSCustomObject]@{ Id = 'Microsoft.GetHelp'; Desc = 'App Obter Ajuda'; Cat = 'News'; Remove = $true }
     [PSCustomObject]@{ Id = 'Microsoft.Getstarted'; Desc = 'Dicas Iniciais'; Cat = 'News'; Remove = $true }
     [PSCustomObject]@{ Id = 'Microsoft.WindowsMaps'; Desc = 'Microsoft Mapas'; Cat = 'News'; Remove = $true }
+    [PSCustomObject]@{ Id = 'MicrosoftWindows.Client.WebExperience'; Desc = 'Painel de Widgets (Pesado)'; Cat = 'News'; Remove = $true }
 
     [PSCustomObject]@{ Id = 'Microsoft.SkypeApp'; Desc = 'Aplicativo Skype'; Cat = 'Comms'; Remove = $true }
     [PSCustomObject]@{ Id = 'Microsoft.Windows.Teams'; Desc = 'Integracao Teams Barra'; Cat = 'Comms'; Remove = $true }
@@ -64,7 +65,7 @@ $Global:AppPackages = @(
     [PSCustomObject]@{ Id = 'microsoft.windowscommunicationsapps'; Desc = 'Correio/Calendario Legado'; Cat = 'Comms'; Remove = $true }
     [PSCustomObject]@{ Id = 'Microsoft.People'; Desc = 'App de Contatos'; Cat = 'Comms'; Remove = $true }
     [PSCustomObject]@{ Id = 'Microsoft.YourPhone'; Desc = 'Vincular ao Celular'; Cat = 'Comms'; Remove = $true }
-    [PSCustomObject]@{ Id = 'Microsoft.Windows.CrossDevice'; Desc = 'Aparelhos Conectados'; Cat = 'Comms'; Remove = $true }
+    [PSCustomObject]@{ Id = 'MicrosoftWindows.CrossDevice'; Desc = 'Aparelhos Conectados'; Cat = 'Comms'; Remove = $true }
 
     [PSCustomObject]@{ Id = 'Microsoft.Todos'; Desc = 'Tarefas (To-Do)'; Cat = 'Prod'; Remove = $false }
     [PSCustomObject]@{ Id = 'Microsoft.MicrosoftStickyNotes'; Desc = 'Notas Auto-Adesivas'; Cat = 'Prod'; Remove = $false }
@@ -74,6 +75,8 @@ $Global:AppPackages = @(
     [PSCustomObject]@{ Id = 'Microsoft.PowerAutomateDesktop'; Desc = 'Power Automate'; Cat = 'Prod'; Remove = $false }
     [PSCustomObject]@{ Id = 'Microsoft.WindowsCalculator'; Desc = 'Calculadora Nativa'; Cat = 'Prod'; Remove = $false }
     [PSCustomObject]@{ Id = 'Microsoft.WindowsAlarms'; Desc = 'Alarmes e Relogio'; Cat = 'Prod'; Remove = $false }
+    [PSCustomObject]@{ Id = 'Microsoft.WindowsNotepad'; Desc = 'Bloco de Notas (Abas)'; Cat = 'Prod'; Remove = $false }
+    [PSCustomObject]@{ Id = 'Microsoft.ScreenSketch'; Desc = 'Ferramenta de Captura'; Cat = 'Prod'; Remove = $false }
 
     [PSCustomObject]@{ Id = 'King.Com.CandyCrushSaga'; Desc = 'Candy Crush Saga'; Cat = 'Ads'; Remove = $true }
     [PSCustomObject]@{ Id = 'Netflix'; Desc = 'Netflix Patrocinado'; Cat = 'Ads'; Remove = $true }
