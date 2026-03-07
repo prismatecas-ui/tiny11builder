@@ -1,0 +1,22 @@
+# Scripts de teste/debug
+test.ps1
+
+# Diretórios e arquivos de compilação/build
+build/
+*.iso
+*.wim
+*.esd
+*.log
+*.txt
+
+# Diretórios temporários de montagem de imagem 
+scratchdir/
+mount/
+
+# Arquivos gerados pelo Windows
+Thumbs.db
+Desktop.ini
+
+# Arquivos de editores/IDE
+.vscode/
+*.swp

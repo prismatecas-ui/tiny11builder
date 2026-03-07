@@ -514,48 +514,72 @@ $BtnStart.Add_Click({
 
                 $script:BuildProcess = New-Object System.Diagnostics.Process
                 $script:BuildProcess.StartInfo = $psi
-                $script:BuildProcess.EnableRaisingEvents = $true
-
-                $script:BuildProcess.add_OutputDataReceived({
-                        param($s, $e)
-                        if ($e.Data) {
-                            $Window.Dispatcher.Invoke([Action] {
-                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                    $LogBox.AppendText("[$timestamp] $($e.Data)`r`n")
-                                    $LogBox.ScrollToEnd()
-                                })
-                        }
-                    })
-
-                $script:BuildProcess.add_ErrorDataReceived({
-                        param($s, $e)
-                        if ($e.Data) {
-                            $Window.Dispatcher.Invoke([Action] {
-                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                    $LogBox.AppendText("[$timestamp] [!] $($e.Data)`r`n")
-                                    $LogBox.ScrollToEnd()
-                                })
-                        }
-                    })
-
-                $script:BuildProcess.add_Exited({
-                        $Window.Dispatcher.Invoke([Action] {
-                                $code = $script:BuildProcess.ExitCode
-                                $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                if ($code -eq 0) {
-                                    $LogBox.AppendText("[$timestamp] [OK] $($Strings.MsgSuccess)`r`n")
-                                }
-                                else {
-                                    $LogBox.AppendText("[$timestamp] [FAIL] Exit code: $code`r`n")
-                                }
-                                $LogBox.ScrollToEnd()
-                                $BtnStart.IsEnabled = $true
-                            })
-                    })
-
+                
                 $script:BuildProcess.Start() | Out-Null
-                $script:BuildProcess.BeginOutputReadLine()
-                $script:BuildProcess.BeginErrorReadLine()
+                $script:OutTask = $script:BuildProcess.StandardOutput.ReadLineAsync()
+                $script:ErrTask = $script:BuildProcess.StandardError.ReadLineAsync()
+                
+                $script:LogTimer = New-Object System.Windows.Threading.DispatcherTimer
+                $script:LogTimer.Interval = [TimeSpan]::FromMilliseconds(100)
+                $script:LogTimer.Add_Tick({
+                        if ($script:OutTask -and $script:OutTask.IsCompleted) {
+                            $line = $script:OutTask.Result
+                            if ($null -ne $line) {
+                                $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                $LogBox.AppendText("[$timestamp] $line`r`n")
+                                $LogBox.ScrollToEnd()
+                                $script:OutTask = $script:BuildProcess.StandardOutput.ReadLineAsync()
+                            }
+                            else {
+                                $script:OutTask = $null
+                            }
+                        }
+                        if ($script:ErrTask -and $script:ErrTask.IsCompleted) {
+                            $line = $script:ErrTask.Result
+                            if ($null -ne $line) {
+                                $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                $LogBox.AppendText("[$timestamp] [!] $line`r`n")
+                                $LogBox.ScrollToEnd()
+                                $script:ErrTask = $script:BuildProcess.StandardError.ReadLineAsync()
+                            }
+                            else {
+                                $script:ErrTask = $null
+                            }
+                        }
+                    
+                        if ($script:BuildProcess.HasExited) {
+                            # Add one last check just in case IsCompleted wasn't caught in the last tick
+                            if ($script:OutTask -and $script:OutTask.IsCompleted) {
+                                $line = $script:OutTask.Result
+                                if ($null -ne $line) {
+                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                    $LogBox.AppendText("[$timestamp] $line`r`n")
+                                    $LogBox.ScrollToEnd()
+                                }
+                            }
+                            if ($script:ErrTask -and $script:ErrTask.IsCompleted) {
+                                $line = $script:ErrTask.Result
+                                if ($null -ne $line) {
+                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
+                                    $LogBox.AppendText("[$timestamp] [!] $line`r`n")
+                                    $LogBox.ScrollToEnd()
+                                }
+                            }
+
+                            $script:LogTimer.Stop()
+                            $code = $script:BuildProcess.ExitCode
+                            $timestamp = (Get-Date).ToString("HH:mm:ss")
+                            if ($code -eq 0) {
+                                $LogBox.AppendText("[$timestamp] [OK] $($Strings.MsgSuccess)`r`n")
+                            }
+                            else {
+                                $LogBox.AppendText("[$timestamp] [FAIL] Exit code: $code`r`n")
+                            }
+                            $LogBox.ScrollToEnd()
+                            $BtnStart.IsEnabled = $true
+                        }
+                    })
+                $script:LogTimer.Start()
                 Write-Log $Strings.MsgSuccess
             }
             catch {
