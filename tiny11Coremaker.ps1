@@ -218,7 +218,7 @@ foreach ($packagePattern in $packagePatterns) {
         $packageIdentity = ($package -split "\s+")[0]
 
         Write-Host "Removing $packageIdentity..."
-        & dism /image:$scratchDir /Remove-Package /PackageName:$packageIdentity 
+        & dism /image:$scratchDir /Remove-Package /PackageName:$packageIdentity > $null 2>&1
     }
 }
 
