@@ -40,7 +40,8 @@ if ((Get-ExecutionPolicy) -eq 'Restricted') {
     $response = Read-Host
     if ($response -eq 'yes') {
         Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Confirm:$false
-    } else {
+    }
+    else {
         Write-Host "The script cannot be run without changing the execution policy. Exiting..."
         exit
     }
@@ -49,11 +50,10 @@ if ((Get-ExecutionPolicy) -eq 'Restricted') {
 # Check and run the script as admin if required
 $adminSID = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-544")
 $adminGroup = $adminSID.Translate([System.Security.Principal.NTAccount])
-$myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
-$myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
-$adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
-if (! $myWindowsPrincipal.IsInRole($adminRole))
-{
+$myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+$myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+$adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+if (! $myWindowsPrincipal.IsInRole($adminRole)) {
     Write-Host "Restarting Tiny11 image creator as admin in a new window, you can close this one."
     $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
     $newProcess.Arguments = $myInvocation.MyCommand.Definition;
@@ -64,7 +64,7 @@ if (! $myWindowsPrincipal.IsInRole($adminRole))
 Start-Transcript -Path "$PSScriptRoot\tiny11.log" 
 # Ask the user for input
 Write-Host "Welcome to tiny11 core builder (GUI MODE)!"
-    Write-Host "Off we go..."
+Write-Host "Off we go..."
 Start-Sleep -Seconds 3
 Clear-Host
 
@@ -84,7 +84,8 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
         Write-Host ' '
         Write-Host 'Converting install.esd to install.wim. This may take a while...'
         & 'DISM' /Export-Image /SourceImageFile:"$DriveLetter\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$ScratchDisk\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
-    } else {
+    }
+    else {
         Write-Host "Can't find Windows OS Installation files in the specified Drive Letter.."
         Write-Host "Please enter the correct DVD Drive Letter.."
         exit
@@ -106,7 +107,8 @@ $wimFilePath = "$($ScratchDisk)\tiny11\sources\install.wim"
 & icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
 try {
     Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction Stop
-} catch {
+}
+catch {
     # This block will catch the error and suppress it.
 }
 New-Item -ItemType Directory -Force -Path "$ScratchDisk\scratchdir" > $null
@@ -118,7 +120,8 @@ $languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default syste
 if ($languageLine) {
     $languageCode = $Matches[1]
     Write-Host "Default system UI language code: $languageCode"
-} else {
+}
+else {
     Write-Host "Default system UI language code not found."
 }
 
@@ -127,7 +130,7 @@ $lines = $imageInfo -split '\r?\n'
 
 foreach ($line in $lines) {
     if ($line -like '*Architecture : *') {
-        $architecture = $line -replace 'Architecture : ',''
+        $architecture = $line -replace 'Architecture : ', ''
         # If the architecture is x64, replace it with amd64
         if ($architecture -eq 'x64') {
             $architecture = 'amd64'
@@ -144,11 +147,11 @@ if (-not $architecture) {
 Write-Host "Mounting complete! Performing removal of applications..."
 
 $packages = & 'dism' '/English' "/image:$($ScratchDisk)\scratchdir" '/Get-ProvisionedAppxPackages' |
-    ForEach-Object {
-        if ($_ -match 'PackageName : (.*)') {
-            $matches[1]
-        }
+ForEach-Object {
+    if ($_ -match 'PackageName : (.*)') {
+        $matches[1]
     }
+}
 $packagePrefixes = @()
 
 if ($AppListFile -and (Test-Path $AppListFile)) {
@@ -220,50 +223,60 @@ foreach ($packagePattern in $packagePatterns) {
 }
 
 
-if (-not $KeepEdge) { Write-Host "Removing Edge:"
-Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\Edge" -Recurse -Force >null
-Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force >null
-Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\EdgeCore" -Recurse -Force >null
-if ($architecture -eq 'amd64') {
-    $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
+if (-not $KeepEdge) {
+    Write-Host "Removing Edge:"
+    Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\Edge" -Recurse -Force >null
+    Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force >null
+    Remove-Item -Path "$ScratchDisk\scratchdir\Program Files (x86)\Microsoft\EdgeCore" -Recurse -Force >null
+    if ($architecture -eq 'amd64') {
+        $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
 
-    if ($folderPath) {
-        & 'takeown' '/f' $folderPath '/r' >null
-        & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
-        Remove-Item -Path $folderPath -Recurse -Force >null
-    } else {
-        Write-Host "Folder not found."
+        if ($folderPath) {
+            & 'takeown' '/f' $folderPath '/r' >null
+            & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
+            Remove-Item -Path $folderPath -Recurse -Force >null
+        }
+        else {
+            Write-Host "Folder not found."
+        }
     }
-} elseif ($architecture -eq 'arm64') {
-    $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "arm64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName >null
+    elseif ($architecture -eq 'arm64') {
+        $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "arm64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName >null
 
-    if ($folderPath) {
-        & 'takeown' '/f' $folderPath '/r'>null
-        & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
-        Remove-Item -Path $folderPath -Recurse -Force >null
-    } else {
-        Write-Host "Folder not found."
+        if ($folderPath) {
+            & 'takeown' '/f' $folderPath '/r'>null
+            & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
+            Remove-Item -Path $folderPath -Recurse -Force >null
+        }
+        else {
+            Write-Host "Folder not found."
+        }
     }
-} else {
-    Write-Host "Unknown architecture: $architecture"
+    else {
+        Write-Host "Unknown architecture: $architecture"
+    }
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r'
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force
 }
-& 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r'
-& 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
-Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force
-if (`) {
-Write-Host "Removing WinRE"
-& 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/r'
-& 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/grant' 'Administrators:F' '/T' '/C'
-Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -Recurse -Force
-New-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -ItemType File -Force
+
+if ($RemoveWinRE) {
+    Write-Host "Removing WinRE"
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/r'
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/grant' 'Administrators:F' '/T' '/C'
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -Recurse -Force
+    New-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -ItemType File -Force
 }
-if (-not $KeepOneDrive) { Write-Host "Removing OneDrive:"
-& 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" >null
-& 'icacls' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' >null
-Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" -Force >null
-Write-Host "Removal complete!"
-Start-Sleep -Seconds 2
-Clear-Host
+if (-not $KeepOneDrive) {
+    Write-Host "Removing OneDrive:"
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" >null
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' >null
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" -Force >null
+    Write-Host "Removal complete!"
+    Start-Sleep -Seconds 2
+    Clear-Host
+}
+
 Write-Host "Taking ownership of the WinSxS folder. This might take a while..."
 & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\WinSxS" '/r'
 & 'icacls' "$ScratchDisk\scratchdir\Windows\WinSxS" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
@@ -276,7 +289,7 @@ $sourceDirectory = "$ScratchDisk\scratchdir\Windows\WinSxS"
 $destinationDirectory = "$ScratchDisk\scratchdir\Windows\WinSxS_edit"
 New-Item -Path $folderPath -ItemType Directory
 if ($architecture -eq "amd64") {
-   $dirsToCopy = @(
+    $dirsToCopy = @(
         "x86_microsoft.windows.common-controls_6595b64144ccf1df_*",
         "x86_microsoft.windows.gdiplus_6595b64144ccf1df_*",    
         "x86_microsoft.windows.i..utomation.proxystub_6595b64144ccf1df_*",
@@ -310,8 +323,8 @@ if ($architecture -eq "amd64") {
         "x86_microsoft.windows.c..-controls.resources_6595b64144ccf1df_*",
         "x86_microsoft.windows.c..-controls.resources_6595b64144ccf1df_*"
     )
- # Copy each directory
-   foreach ($dir in $dirsToCopy) {
+    # Copy each directory
+    foreach ($dir in $dirsToCopy) {
         $sourceDirs = Get-ChildItem -Path $sourceDirectory -Filter $dir -Directory
         foreach ($sourceDir in $sourceDirs) {
             $destDir = Join-Path -Path $destinationDirectory -ChildPath $sourceDir.Name
@@ -320,9 +333,9 @@ if ($architecture -eq "amd64") {
         }
     }
 }
- elseif ($architecture -eq "arm64") {
+elseif ($architecture -eq "arm64") {
     # Specify the list of files to copy
-     $dirsToCopy = @(
+    $dirsToCopy = @(
         "arm64_microsoft-windows-servicingstack-onecore_31bf3856ad364e35_*",
         "Catalogs"
         "FileMaps"
@@ -359,17 +372,17 @@ if ($architecture -eq "amd64") {
     )
 }
 foreach ($dir in $dirsToCopy) {
-        $sourceDirs = Get-ChildItem -Path $sourceDirectory -Filter $dir -Directory
-        foreach ($sourceDir in $sourceDirs) {
-            $destDir = Join-Path -Path $destinationDirectory -ChildPath $sourceDir.Name
-            Write-Host "Copying $sourceDir.FullName to $destDir"
-            Copy-Item -Path $sourceDir.FullName -Destination $destDir -Recurse -Force
-        }
-    }  
+    $sourceDirs = Get-ChildItem -Path $sourceDirectory -Filter $dir -Directory
+    foreach ($sourceDir in $sourceDirs) {
+        $destDir = Join-Path -Path $destinationDirectory -ChildPath $sourceDir.Name
+        Write-Host "Copying $sourceDir.FullName to $destDir"
+        Copy-Item -Path $sourceDir.FullName -Destination $destDir -Recurse -Force
+    }
+}  
 
 
 Write-Host "Deleting WinSxS. This may take a while..."
-        Remove-Item -Path $ScratchDisk\scratchdir\Windows\WinSxS -Recurse -Force
+Remove-Item -Path $ScratchDisk\scratchdir\Windows\WinSxS -Recurse -Force
 
 Rename-Item -Path $ScratchDisk\scratchdir\Windows\WinSxS_edit -NewName $ScratchDisk\scratchdir\Windows\WinSxS
 Write-Host "Complete!"
@@ -405,7 +418,7 @@ Write-Host "Disabling Sponsored Apps:"
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'PreInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'PreInstalledAppsEverEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SilentInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SoftLandingEnabled' '/t' 'REG_DWORD' '/d' '0' '/f'| Out-Null
+& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SoftLandingEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContentEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-310093Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-338388Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
@@ -431,22 +444,29 @@ Write-Host "Disabling BitLocker Device Encryption"
 Write-Host "Disabling Chat icon:"
 & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat' '/v' 'ChatIcon' '/t' 'REG_DWORD' '/d' '3' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' '/v' 'TaskbarMn' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-if (-not $KeepEdge) { Write-Host "Removing Edge related registries"
-reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge" /f | Out-Null
-reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f | Out-Null
-if (-not $KeepOneDrive) { Write-Host "Disabling OneDrive folder backup"
-& 'reg' 'add' "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" '/v' 'DisableFileSyncNGSC' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
-Write-Host "Disabling Telemetry:"
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy' '/v' 'TailoredExperiencesWithDiagnosticDataEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy' '/v' 'HasAccepted' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Input\TIPC' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitInkCollection' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitTextCollection' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization\TrainedDataStore' '/v' 'HarvestContacts' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Personalization\Settings' '/v' 'AcceptedPrivacyPolicy' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\DataCollection' '/v' 'AllowTelemetry' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
-& 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\dmwappushservice' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f' | Out-Null
+if (-not $KeepEdge) {
+    Write-Host "Removing Edge related registries"
+    reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge" /f | Out-Null
+    reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f | Out-Null
+}
+if (-not $KeepOneDrive) {
+    Write-Host "Disabling OneDrive folder backup"
+    & 'reg' 'add' "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" '/v' 'DisableFileSyncNGSC' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
+}
+if ($DisableTelemetry) {
+    Write-Host "Disabling Telemetry:"
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy' '/v' 'TailoredExperiencesWithDiagnosticDataEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy' '/v' 'HasAccepted' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Input\TIPC' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitInkCollection' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitTextCollection' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization\TrainedDataStore' '/v' 'HarvestContacts' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Personalization\Settings' '/v' 'AcceptedPrivacyPolicy' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\DataCollection' '/v' 'AllowTelemetry' '/t' 'REG_DWORD' '/d' '0' '/f' | Out-Null
+    & 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\dmwappushservice' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f' | Out-Null
+}
+
 Write-Host "Prevents installation or DevHome and Outlook:"
 & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate' '/v' 'workCompleted' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
 & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate' '/v' 'workCompleted' '/t' 'REG_DWORD' '/d' '1' '/f' | Out-Null
@@ -480,39 +500,39 @@ Remove-Item -Path "$tasksPath\Microsoft\Windows\Chkdsk\Proxy" -Force -ErrorActio
 Remove-Item -Path "$tasksPath\Microsoft\Windows\Windows Error Reporting\QueueReporting" -Force -ErrorAction SilentlyContinue
 
 Write-Host "Task files have been deleted."
-if (`) {
-Write-Host "Disabling Windows Update..."
-& 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE1' '/t' 'REG_SZ' '/d' 'net stop wuauserv' '/f'
-& 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE2' '/t' 'REG_SZ' '/d' 'sc stop wuauserv' '/f'
-& 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE3' '/t' 'REG_SZ' '/d' 'sc config wuauserv start= disabled' '/f'
-& 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'DisbaleWUPostOOBE1' '/t' 'REG_SZ' '/d' 'reg add HKLM\SYSTEM\CurrentControlSet\Services\wuauserv /v Start /t REG_DWORD /d 4 /f' '/f'
-& 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'DisbaleWUPostOOBE2' '/t' 'REG_SZ' '/d' 'reg add HKLM\SYSTEM\ControlSet001\Services\wuauserv /v Start /t REG_DWORD /d 4 /f' '/f'
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'DoNotConnectToWindowsUpdateInternetLocations' '/t' 'REG_DWORD' '/d' '1' '/f'
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'DisableWindowsUpdateAccess' '/t' 'REG_DWORD' '/d' '1' '/f' 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUServer' '/t' 'REG_SZ' '/d' 'localhost' '/f' 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUStatusServer' '/t' 'REG_SZ' '/d' 'localhost' '/f' 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'UpdateServiceUrlAlternate' '/t' 'REG_SZ' '/d' 'localhost' '/f'
-} 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' '/v' 'UseWUServer' '/t' 'REG_DWORD' '/d' '1' '/f' 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'DisableOnline' '/t' 'REG_DWORD' '/d' '1' '/f' 
-& 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\wuauserv' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f' 
-& 'reg' 'delete' 'HKLM\zSYSTEM\ControlSet001\Services\WaaSMedicSVC' '/f'
-& 'reg' 'delete' 'HKLM\zSYSTEM\ControlSet001\Services\UsoSvc' '/f'
-& 'reg' 'add' 'HKEY_LOCAL_MACHINE\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' '/v' 'NoAutoUpdate' '/t' 'REG_DWORD' '/d' '1' '/f'
-Write-Host "Disabling Windows Defender"
-# Set registry values for Windows Defender services
-$servicePaths = @(
-    "WinDefend",
-    "WdNisSvc",
-    "WdNisDrv",
-    "WdFilter",
-    "Sense"
-)
-
-foreach ($path in $servicePaths) {
-    Set-ItemProperty -Path "HKLM:\zSYSTEM\ControlSet001\Services\$path" -Name "Start" -Value 4
+if ($DisableUpdate) {
+    Write-Host "Disabling Windows Update..."
+    & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE1' '/t' 'REG_SZ' '/d' 'net stop wuauserv' '/f'
+    & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE2' '/t' 'REG_SZ' '/d' 'sc stop wuauserv' '/f'
+    & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'StopWUPostOOBE3' '/t' 'REG_SZ' '/d' 'sc config wuauserv start= disabled' '/f'
+    & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'DisbaleWUPostOOBE1' '/t' 'REG_SZ' '/d' 'reg add HKLM\SYSTEM\CurrentControlSet\Services\wuauserv /v Start /t REG_DWORD /d 4 /f' '/f'
+    & 'reg' 'add' "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" '/v' 'DisbaleWUPostOOBE2' '/t' 'REG_SZ' '/d' 'reg add HKLM\SYSTEM\ControlSet001\Services\wuauserv /v Start /t REG_DWORD /d 4 /f' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'DoNotConnectToWindowsUpdateInternetLocations' '/t' 'REG_DWORD' '/d' '1' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'DisableWindowsUpdateAccess' '/t' 'REG_DWORD' '/d' '1' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUServer' '/t' 'REG_SZ' '/d' 'localhost' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'WUStatusServer' '/t' 'REG_SZ' '/d' 'localhost' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' '/v' 'UpdateServiceUrlAlternate' '/t' 'REG_SZ' '/d' 'localhost' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' '/v' 'UseWUServer' '/t' 'REG_DWORD' '/d' '1' '/f'
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'DisableOnline' '/t' 'REG_DWORD' '/d' '1' '/f'
+    & 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\wuauserv' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f'
+    & 'reg' 'delete' 'HKLM\zSYSTEM\ControlSet001\Services\WaaSMedicSVC' '/f'
+    & 'reg' 'delete' 'HKLM\zSYSTEM\ControlSet001\Services\UsoSvc' '/f'
+    & 'reg' 'add' 'HKEY_LOCAL_MACHINE\zSOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' '/v' 'NoAutoUpdate' '/t' 'REG_DWORD' '/d' '1' '/f'
 }
-& 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer' '/v' 'SettingsPageVisibility' '/t' 'REG_SZ' '/d' 'hide:virus;windowsupdate' '/f' 
+if ($RemoveDefender) {
+    Write-Host "Disabling Windows Defender"
+    $servicePaths = @(
+        "WinDefend",
+        "WdNisSvc",
+        "WdNisDrv",
+        "WdFilter",
+        "Sense"
+    )
+    foreach ($path in $servicePaths) {
+        Set-ItemProperty -Path "HKLM:\zSYSTEM\ControlSet001\Services\$path" -Name "Start" -Value 4
+    }
+    & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer' '/v' 'SettingsPageVisibility' '/t' 'REG_SZ' '/d' 'hide:virus;windowsupdate' '/f'
+}
 Write-Host "Tweaking complete!"
 Write-Host "Unmounting Registry..."
 reg unload HKLM\zCOMPONENTS >null
@@ -578,7 +598,8 @@ $localOSCDIMGPath = "$PSScriptRoot\oscdimg.exe"
 if ([System.IO.Directory]::Exists($ADKDepTools)) {
     Write-Host "Will be using oscdimg.exe from system ADK."
     $OSCDIMG = "$ADKDepTools\oscdimg.exe"
-} else {
+}
+else {
     Write-Host "ADK folder not found. Will be using bundled oscdimg.exe."
     
     
@@ -590,11 +611,13 @@ if ([System.IO.Directory]::Exists($ADKDepTools)) {
 
         if (Test-Path $localOSCDIMGPath) {
             Write-Host "oscdimg.exe downloaded successfully."
-        } else {
+        }
+        else {
             Write-Error "Failed to download oscdimg.exe."
             exit 1
         }
-    } else {
+    }
+    else {
         Write-Host "oscdimg.exe already exists locally."
     }
 

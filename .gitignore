@@ -12,11 +12,14 @@ build/
 # Diretórios temporários de montagem de imagem 
 scratchdir/
 mount/
+docs/
 
 # Arquivos gerados pelo Windows
 Thumbs.db
 Desktop.ini
+autounattend.xml
 
 # Arquivos de editores/IDE
 .vscode/
 *.swp
+.agent/
