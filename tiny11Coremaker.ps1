@@ -232,9 +232,11 @@ if (-not $KeepEdge) {
         $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
 
         if ($folderPath) {
-            & 'takeown' '/f' $folderPath '/r' >null
-            & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
-            Remove-Item -Path $folderPath -Recurse -Force >null
+            foreach ($folder in $folderPath) {
+                & 'takeown' '/f' $folder '/r' > $null 2>&1
+                & icacls $folder "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null 2>&1
+                Remove-Item -Path $folder -Recurse -Force -ErrorAction SilentlyContinue
+            }
         }
         else {
             Write-Host "Folder not found."
@@ -244,9 +246,11 @@ if (-not $KeepEdge) {
         $folderPath = Get-ChildItem -Path "$ScratchDisk\scratchdir\Windows\WinSxS" -Filter "arm64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName >null
 
         if ($folderPath) {
-            & 'takeown' '/f' $folderPath '/r'>null
-            & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' >null
-            Remove-Item -Path $folderPath -Recurse -Force >null
+            foreach ($folder in $folderPath) {
+                & 'takeown' '/f' $folder '/r' > $null 2>&1
+                & icacls $folder "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null 2>&1
+                Remove-Item -Path $folder -Recurse -Force -ErrorAction SilentlyContinue
+            }
         }
         else {
             Write-Host "Folder not found."
@@ -255,23 +259,23 @@ if (-not $KeepEdge) {
     else {
         Write-Host "Unknown architecture: $architecture"
     }
-    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r'
-    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
-    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null 2>&1
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null 2>&1
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if ($RemoveWinRE) {
     Write-Host "Removing WinRE"
-    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/r'
-    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/grant' 'Administrators:F' '/T' '/C'
-    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -Recurse -Force
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/r' > $null 2>&1
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\Recovery" '/grant' 'Administrators:F' '/T' '/C' > $null 2>&1
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -Recurse -Force -ErrorAction SilentlyContinue
     New-Item -Path "$ScratchDisk\scratchdir\Windows\System32\Recovery\winre.wim" -ItemType File -Force
 }
 if (-not $KeepOneDrive) {
     Write-Host "Removing OneDrive:"
-    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" >null
-    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' >null
-    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" -Force >null
+    & 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" > $null 2>&1
+    & 'icacls' "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null 2>&1
+    Remove-Item -Path "$ScratchDisk\scratchdir\Windows\System32\OneDriveSetup.exe" -Force -ErrorAction SilentlyContinue
     Write-Host "Removal complete!"
     Start-Sleep -Seconds 2
     Clear-Host
