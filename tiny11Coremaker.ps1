@@ -94,8 +94,8 @@ if ((Test-Path "$DriveLetter\sources\boot.wim") -eq $false -or (Test-Path "$Driv
 
 Write-Host "Copying Windows image..."
 Copy-Item -Path "$DriveLetter\*" -Destination "$ScratchDisk\tiny11" -Recurse -Force > null
-Set-ItemProperty -Path "$ScratchDisk\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
-Remove-Item "$ScratchDisk\tiny11\sources\install.esd" > $null 2>&1
+Set-ItemProperty -Path "$ScratchDisk\tiny11\sources\install.esd" -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
+Remove-Item "$ScratchDisk\tiny11\sources\install.esd" -Force -ErrorAction SilentlyContinue
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 Clear-Host
