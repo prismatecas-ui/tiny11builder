@@ -61,7 +61,7 @@ if (! $myWindowsPrincipal.IsInRole($adminRole)) {
     [System.Diagnostics.Process]::Start($newProcess);
     exit
 }
-Start-Transcript -Path "$PSScriptRoot\tiny11.log" 
+Start-Transcript -Path "$ScratchDisk\tiny11Coremaker_$(get-date -f yyyyMMdd_HHmmss).log" -ErrorAction SilentlyContinue
 # Ask the user for input
 Write-Host "Welcome to tiny11 core builder (GUI MODE)!"
 Write-Host "Off we go..."
