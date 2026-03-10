@@ -272,34 +272,34 @@ $Global:AppPackages = @(
 "@
 
 $Reader = (New-Object System.Xml.XmlNodeReader $xaml)
-$Window = [Windows.Markup.XamlReader]::Load($Reader)
+$script:Window = [Windows.Markup.XamlReader]::Load($Reader)
 
 # UI Elements
-$ComboScript = $Window.FindName("ComboScript")
-$ComboDrives = $Window.FindName("ComboDrives")
-$ComboIndex = $Window.FindName("ComboIndex")
-$BtnStart = $Window.FindName("BtnStart")
-$BtnClear = $Window.FindName("BtnClear")
-$BtnExit = $Window.FindName("BtnExit")
-$LogBox = $Window.FindName("LogBox")
-$BtnListaBloatware = $Window.FindName("BtnListaBloatware")
+$ComboScript = $script:Window.FindName("ComboScript")
+$ComboDrives = $script:Window.FindName("ComboDrives")
+$ComboIndex = $script:Window.FindName("ComboIndex")
+$BtnStart = $script:Window.FindName("BtnStart")
+$BtnClear = $script:Window.FindName("BtnClear")
+$BtnExit = $script:Window.FindName("BtnExit")
+$LogBox = $script:Window.FindName("LogBox")
+$BtnListaBloatware = $script:Window.FindName("BtnListaBloatware")
 
-$ChkCatAds = $Window.FindName("ChkCatAds")
-$ChkCatNews = $Window.FindName("ChkCatNews")
-$ChkCatGames = $Window.FindName("ChkCatGames")
-$ChkCatMedia = $Window.FindName("ChkCatMedia")
-$ChkCatComms = $Window.FindName("ChkCatComms")
-$ChkCatDev = $Window.FindName("ChkCatDev")
-$ChkCatSys = $Window.FindName("ChkCatSys")
-$ChkCatProd = $Window.FindName("ChkCatProd")
+$ChkCatAds = $script:Window.FindName("ChkCatAds")
+$ChkCatNews = $script:Window.FindName("ChkCatNews")
+$ChkCatGames = $script:Window.FindName("ChkCatGames")
+$ChkCatMedia = $script:Window.FindName("ChkCatMedia")
+$ChkCatComms = $script:Window.FindName("ChkCatComms")
+$ChkCatDev = $script:Window.FindName("ChkCatDev")
+$ChkCatSys = $script:Window.FindName("ChkCatSys")
+$ChkCatProd = $script:Window.FindName("ChkCatProd")
 
-$ChkRemoveDefender = $Window.FindName("ChkRemoveDefender")
-$ChkDisableUpdate = $Window.FindName("ChkDisableUpdate")
-$ChkRemoveWinRE = $Window.FindName("ChkRemoveWinRE")
-$ChkRemoveExtras = $Window.FindName("ChkRemoveExtras")
+$ChkRemoveDefender = $script:Window.FindName("ChkRemoveDefender")
+$ChkDisableUpdate = $script:Window.FindName("ChkDisableUpdate")
+$ChkRemoveWinRE = $script:Window.FindName("ChkRemoveWinRE")
+$ChkRemoveExtras = $script:Window.FindName("ChkRemoveExtras")
 
 # Sort UI Checkboxes Alphabetically based on Language
-$PanelCategories = $Window.FindName("PanelCategories")
+$PanelCategories = $script:Window.FindName("PanelCategories")
 if ($PanelCategories) {
     $catCheckboxes = @($PanelCategories.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | Sort-Object Content)
     foreach ($chk in $catCheckboxes) {
@@ -308,7 +308,7 @@ if ($PanelCategories) {
     }
 }
 
-$PanelSysSettings = $Window.FindName("PanelSysSettings")
+$PanelSysSettings = $script:Window.FindName("PanelSysSettings")
 if ($PanelSysSettings) {
     $sysCheckboxes = @($PanelSysSettings.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | Sort-Object Content)
     foreach ($chk in $sysCheckboxes) {
@@ -401,16 +401,23 @@ function Sync-CategoryToGlobal($Cat, $State) {
 
 # Reverse Sync (Global Array To Main UI)
 function Sync-GlobalToCategoryUI {
-    $cats = @('Ads', 'News', 'Games', 'Media', 'Comms', 'Dev', 'Sys', 'Prod')
-    foreach ($c in $cats) {
-        $apps = $Global:AppPackages | Where-Object Cat -eq $c
-        if ($apps.Count -gt 0) {
-            $allRemoved = ($apps | Where-Object Remove -eq $false).Count -eq 0
-            $chkItem = $Window.FindName("ChkCat$c")
-            if ($null -ne $chkItem) {
-                $chkItem.IsChecked = $allRemoved
+    try {
+        $cats = @('Ads', 'News', 'Games', 'Media', 'Comms', 'Dev', 'Sys', 'Prod')
+        foreach ($c in $cats) {
+            $apps = @($Global:AppPackages | Where-Object Cat -eq $c)
+            if ($apps.Count -gt 0) {
+                # Protect against null or single object arrays
+                $falseApps = @($apps | Where-Object { $_.Remove -eq $false })
+                $allRemoved = ($falseApps.Count -eq 0)
+                $chkItem = $script:Window.FindName("ChkCat$c")
+                if ($null -ne $chkItem) {
+                    $chkItem.IsChecked = $allRemoved
+                }
             }
         }
+    }
+    catch {
+        Write-Output "Erro no Sync-Global: $($_.Exception.Message)" | Out-File "$PSScriptRoot\error_gui.txt" -Append
     }
 }
 
@@ -425,7 +432,7 @@ $ChkCatSys.Add_Click({ Sync-CategoryToGlobal 'Sys' $ChkCatSys.IsChecked })
 $ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
 
 $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
-$BtnExit.Add_Click({ $Window.Close() })
+$BtnExit.Add_Click({ $script:Window.Close() })
 
 $BtnListaBloatware.Add_Click({
         $xamlAdv = @"
@@ -462,7 +469,7 @@ $BtnListaBloatware.Add_Click({
 </Window>
 "@
         $script:WinAdv = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader ([xml]$xamlAdv)))
-        $script:WinAdv.Owner = $Window
+        $script:WinAdv.Owner = $script:Window
     
         $BtnSalvar = $script:WinAdv.FindName("BtnSalvar")
         $BtnSalvar.Add_Click({
@@ -616,5 +623,5 @@ $BtnStart.Add_Click({
     })
 
 $Window.Add_Loaded({ Write-Log $Strings.MsgGuiInit; Get-MountedDrives })
-$Window.ShowDialog() | Out-Null
+$script:Window.ShowDialog() | Out-Null
 
