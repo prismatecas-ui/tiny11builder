@@ -379,7 +379,7 @@ foreach ($dir in $dirsToCopy) {
     foreach ($sourceDir in $sourceDirs) {
         $destDir = Join-Path -Path $destinationDirectory -ChildPath $sourceDir.Name
         Write-Host "Copying $sourceDir.FullName to $destDir"
-        Copy-Item -Path $sourceDir.FullName -Destination $destDir -Recurse -Force
+        Copy-Item -Path $sourceDir.FullName -Destination $destDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 }  
 
