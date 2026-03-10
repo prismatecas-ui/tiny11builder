@@ -281,8 +281,8 @@ if (-not $KeepOneDrive) {
 }
 
 Write-Host "Taking ownership of the WinSxS folder. This might take a while..."
-& 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\WinSxS" '/r'
-& 'icacls' "$ScratchDisk\scratchdir\Windows\WinSxS" '/grant' "$($adminGroup.Value):(F)" '/T' '/C'
+& 'takeown' '/f' "$ScratchDisk\scratchdir\Windows\WinSxS" '/r' > $null 2>&1
+& 'icacls' "$ScratchDisk\scratchdir\Windows\WinSxS" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null 2>&1
 Write-host "Complete!"
 Start-Sleep -Seconds 2
 Clear-Host
