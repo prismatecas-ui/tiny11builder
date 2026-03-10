@@ -41,6 +41,7 @@ $Strings = @{
     BtnAppCustom     = if ($IsPT) { "Personalização de Apps" } else { "App Customization" }
     ConsoleTitle     = if ($IsPT) { "Console de Processamento:" } else { "Processing Console:" }
     BtnClear         = if ($IsPT) { "LIMPAR CONSOLE" } else { "CLEAR CONSOLE" }
+    BtnExit          = if ($IsPT) { "SAIR" } else { "EXIT" }
     BtnStart         = if ($IsPT) { "Otimizar ISO" } else { "Optimize ISO" }
     AdvTitle         = if ($IsPT) { "Controle de Apps" } else { "App Control" }
     AdvHint          = if ($IsPT) { "Desmarque os apps que deseja manter (Marcado = Remover)" } else { "Uncheck apps you want to keep (Checked = Remove)" }
@@ -262,6 +263,7 @@ $Global:AppPackages = @(
             <TextBox Name="LogBox" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Background="#0C0C0C" Foreground="#00CC6A" FontFamily="Cascadia Mono, Consolas" FontSize="12" VerticalScrollBarVisibility="Auto" BorderBrush="#383838"/>
         </Grid>
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Name="BtnExit" Background="#4a4a4a" Content="$($Strings.BtnExit)" Width="120" Margin="0,0,20,0"/>
             <Button Name="BtnClear" Background="#FF4343" Content="$($Strings.BtnClear)" Width="220" Margin="0,0,20,0"/>
             <Button Name="BtnStart" Content="$($Strings.BtnStart)" Width="220"/>
         </StackPanel>
@@ -278,7 +280,7 @@ $ComboDrives = $Window.FindName("ComboDrives")
 $ComboIndex = $Window.FindName("ComboIndex")
 $BtnStart = $Window.FindName("BtnStart")
 $BtnClear = $Window.FindName("BtnClear")
-$BtnExit = $Window.FindName("BtnExit") # Find the new Exit button
+$BtnExit = $Window.FindName("BtnExit")
 $LogBox = $Window.FindName("LogBox")
 $BtnListaBloatware = $Window.FindName("BtnListaBloatware")
 
@@ -408,7 +410,7 @@ $ChkCatSys.Add_Click({ Sync-CategoryToGlobal 'Sys' $ChkCatSys.IsChecked })
 $ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
 
 $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
-$BtnExit.Add_Click({ $Window.Close() }) # Close the main window
+$BtnExit.Add_Click({ $Window.Close() })
 
 $BtnListaBloatware.Add_Click({
         $xamlAdv = @"
