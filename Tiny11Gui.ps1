@@ -29,7 +29,7 @@ $SysLang = [System.Globalization.CultureInfo]::CurrentUICulture.Name
 $IsPT = $SysLang -match '^pt'
 
 $Strings = @{
-    WindowTitle      = if ($IsPT) { "Tiny11 GUI Builder" } else { "Tiny11 GUI Builder" }
+    WindowTitle      = if ($IsPT) { "Tiny11 GUI" } else { "Tiny11 GUI" }
     Subtitle         = if ($IsPT) { "Construa uma ISO do Windows 11 leve, rápida e sob medida." } else { "Build a lightweight, fast, custom Windows 11 ISO." }
     SourceDrive      = if ($IsPT) { "Drive de Origem:" } else { "Source Drive:" }
     VersionIndex     = if ($IsPT) { "Versão:" } else { "Version:" }
@@ -48,7 +48,8 @@ $Strings = @{
     AdvCategory      = if ($IsPT) { "Categoria:" } else { "Category:" }
     MsgGuiInit       = if ($IsPT) { "[INFO] GUI Inicializada." } else { "[INFO] GUI Initialized." }
     MsgNoDrive       = if ($IsPT) { "[ERRO] Selecione um Drive." } else { "[ERROR] Select a Drive." }
-    MsgSuccess       = if ($IsPT) { "[SUCESSO] Processo em andamento no console." } else { "[SUCCESS] Process running in console." }
+    MsgSuccess       = if ($IsPT) { "[OK] Processo Concluído com Sucesso." } else { "[OK] Process Completed Successfully." }
+    MsgStarted       = if ($IsPT) { "[SUCESSO] Processo iniciado no console." } else { "[SUCCESS] Process running in console." }
     MsgNoImage       = if ($IsPT) { "[!] Imagem WIM/ESD não encontrada." } else { "[!] WIM/ESD image not found." }
     CbUnknown        = if ($IsPT) { "Desconhecido" } else { "Unknown" }
     CbDefault        = if ($IsPT) { "Padrão" } else { "Default" }
@@ -277,6 +278,7 @@ $ComboDrives = $Window.FindName("ComboDrives")
 $ComboIndex = $Window.FindName("ComboIndex")
 $BtnStart = $Window.FindName("BtnStart")
 $BtnClear = $Window.FindName("BtnClear")
+$BtnExit = $Window.FindName("BtnExit") # Find the new Exit button
 $LogBox = $Window.FindName("LogBox")
 $BtnListaBloatware = $Window.FindName("BtnListaBloatware")
 
@@ -406,6 +408,7 @@ $ChkCatSys.Add_Click({ Sync-CategoryToGlobal 'Sys' $ChkCatSys.IsChecked })
 $ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
 
 $BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
+$BtnExit.Add_Click({ $Window.Close() }) # Close the main window
 
 $BtnListaBloatware.Add_Click({
         $xamlAdv = @"
@@ -491,6 +494,8 @@ $BtnStart.Add_Click({
         $scriptArgs += " -AppListFile `"$removeFile`""
 
         Write-Log "---------------------------------------------"
+        Write-Log "[INFO] Limpando pasta de compilação anterior ($PSScriptRoot\build) se existir..."
+        Remove-Item -Path "$PSScriptRoot\build" -Recurse -Force -ErrorAction SilentlyContinue
         Write-Log "ISO Drive: $selectedDrive"
         if ((Test-Path "$selectedDrive\sources\install.wim") -or (Test-Path "$selectedDrive\sources\install.esd")) {
             
@@ -580,7 +585,7 @@ $BtnStart.Add_Click({
                         }
                     })
                 $script:LogTimer.Start()
-                Write-Log $Strings.MsgSuccess
+                Write-Log $Strings.MsgStarted
             }
             catch {
                 Write-Log "[ERRO/ERROR] $TargetScript failed to start: $_"
