@@ -399,6 +399,21 @@ function Sync-CategoryToGlobal($Cat, $State) {
     $Global:AppPackages | Where-Object Cat -eq $Cat | ForEach-Object { $_.Remove = $boolState }
 }
 
+# Reverse Sync (Global Array To Main UI)
+function Sync-GlobalToCategoryUI {
+    $cats = @('Ads', 'News', 'Games', 'Media', 'Comms', 'Dev', 'Sys', 'Prod')
+    foreach ($c in $cats) {
+        $apps = $Global:AppPackages | Where-Object Cat -eq $c
+        if ($apps.Count -gt 0) {
+            $allRemoved = ($apps | Where-Object Remove -eq $false).Count -eq 0
+            $chkItem = $Window.FindName("ChkCat$c")
+            if ($null -ne $chkItem) {
+                $chkItem.IsChecked = $allRemoved
+            }
+        }
+    }
+}
+
 # Events
 $ChkCatAds.Add_Click({ Sync-CategoryToGlobal 'Ads' $ChkCatAds.IsChecked })
 $ChkCatNews.Add_Click({ Sync-CategoryToGlobal 'News' $ChkCatNews.IsChecked })
@@ -457,6 +472,7 @@ $BtnListaBloatware.Add_Click({
                     if ($null -ne $chkObj) { $app.Remove = ($chkObj.IsChecked -eq $true) }
                 }
                 $script:WinAdv.Close()
+                Sync-GlobalToCategoryUI
             })
         $script:WinAdv.ShowDialog() | Out-Null
     })
