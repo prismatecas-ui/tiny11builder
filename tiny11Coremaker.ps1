@@ -590,9 +590,11 @@ reg unload HKLM\zSYSTEM >null
 Write-Host "Unmounting image..."
 & 'dism' '/English' '/unmount-image' "/mountdir:$ScratchDisk\scratchdir" '/commit'
 Clear-Host
-Write-Host "Exporting ESD. This may take a while..."
-& dism /Export-Image /SourceImageFile:"$ScratchDisk\tiny11\sources\install.wim" /SourceIndex:1 /DestinationImageFile:"$ScratchDisk\tiny11\sources\install.esd" /Compress:recovery
-Remove-Item "$ScratchDisk\tiny11\sources\install.wim" > $null 2>&1
+Write-Host "Verifying install.wim size..."
+if (Test-Path "$ScratchDisk\tiny11\sources\install.wim") {
+    $wimParams = Get-Item "$ScratchDisk\tiny11\sources\install.wim"
+    Write-Host "Final OS image size: $([math]::Round($wimParams.Length / 1MB, 2)) MB"
+}
 Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
 Write-Host "Creating ISO image..."
 $ADKDepTools = "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\$hostarchitecture\Oscdimg"
