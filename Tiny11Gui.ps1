@@ -14,11 +14,17 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     exit
 }
 
-$ErrorActionPreference = "Stop"
-Set-StrictMode -Version Latest
-Add-Type -AssemblyName PresentationFramework
-Add-Type -AssemblyName PresentationCore
-Add-Type -AssemblyName WindowsBase
+try {
+    $ErrorActionPreference = "Stop"
+    
+    # Load Basic Assemblies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName WindowsBase
+    Add-Type -AssemblyName PresentationCore
+    Add-Type -AssemblyName PresentationFramework
+    Add-Type -AssemblyName System.Xaml
+
+    Set-StrictMode -Version Latest
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -451,14 +457,16 @@ $BtnListaBloatware.Add_Click({
 "@
         $sortedCats = $Global:AppPackages | Group-Object Cat | Sort-Object { $Strings["Cat$($_.Name)"] } | Select-Object -ExpandProperty Name
         foreach ($c in $sortedCats) {
-            $catLabel = $Strings["Cat$c"]
-            $xamlAdv += "<TextBlock Text='$($Strings.AdvCategory) $catLabel' FontWeight='Bold' Foreground='#89B4FA' Margin='5,10,0,5'/>`n"
+            $catLabel = [Security.SecurityElement]::Escape($Strings["Cat$c"])
+            $advCatTag = [Security.SecurityElement]::Escape($Strings.AdvCategory)
+            $xamlAdv += "<TextBlock Text=`"$advCatTag $catLabel`" FontWeight=`"Bold`" Foreground=`"#89B4FA`" Margin=`"5,10,0,5`"/>`n"
             $appsInCat = $Global:AppPackages | Where-Object Cat -eq $c | Sort-Object Desc
             foreach ($app in $appsInCat) {
-                $ch = if ($app.Remove) { "IsChecked='True'" } else { "" }
+                $ch = if ($app.Remove) { "IsChecked=`"True`"" } else { "" }
                 $cleanId = $app.Id -replace '\.', '_'
-                $tooltip = "ID: $($app.Id)"
-                $xamlAdv += "<CheckBox Name='chk_$cleanId' Content='$($app.Desc)' ToolTip='$tooltip' $ch />`n"
+                $safeDesc = [Security.SecurityElement]::Escape($app.Desc)
+                $safeTooltip = [Security.SecurityElement]::Escape("ID: $($app.Id)")
+                $xamlAdv += "<CheckBox Name=`"chk_$cleanId`" Content=`"$safeDesc`" ToolTip=`"$safeTooltip`" $ch />`n"
             }
         }
         $xamlAdv += @"
@@ -520,7 +528,16 @@ $BtnStart.Add_Click({
 
         Write-Log "---------------------------------------------"
         Write-Log "[INFO] Limpando pasta de compilação anterior ($PSScriptRoot\build) se existir..."
-        Remove-Item -Path "$PSScriptRoot\build" -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path "$PSScriptRoot\build\scratchdir") {
+            Write-Log "[INFO] Forçando desmontagem de imagem WIM presa de execução anterior..."
+            Dismount-WindowsImage -Path "$PSScriptRoot\build\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
+            & dism.exe /Cleanup-Mountpoints | Out-Null
+            & dism.exe /Cleanup-Wim | Out-Null
+        }
+        cmd.exe /c "rmdir /s /q `"$PSScriptRoot\build`"" | Out-Null
+        if (Test-Path "$PSScriptRoot\build") {
+            Remove-Item -LiteralPath "\\?\$PSScriptRoot\build" -Recurse -Force -ErrorAction SilentlyContinue
+        }
         Write-Log "ISO Drive: $selectedDrive"
         if ((Test-Path "$selectedDrive\sources\install.wim") -or (Test-Path "$selectedDrive\sources\install.esd")) {
             
@@ -624,4 +641,12 @@ $BtnStart.Add_Click({
 
 $Window.Add_Loaded({ Write-Log $Strings.MsgGuiInit; Get-MountedDrives })
 $script:Window.ShowDialog() | Out-Null
+} catch {
+    $err = "A critical error occurred:`n`n$($_.Exception.Message)`n`nStack: $($_.ScriptStackTrace)"
+    try {
+        [System.Windows.MessageBox]::Show($err, "Tiny11 GUI Error")
+    } catch {
+        Write-Error $err
+    }
+}
 

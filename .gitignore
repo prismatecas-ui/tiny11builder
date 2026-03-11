@@ -23,3 +23,9 @@ autounattend.xml
 .vscode/
 *.swp
 .agent/
+
+# Build Tools/Executáveis
+*.exe
+
+# Scripts Utilitários Locais
+ForceCleanup.ps1

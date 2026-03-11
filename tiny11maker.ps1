@@ -47,6 +47,12 @@ trap {
     Write-Host $_.Exception.Message -ForegroundColor Yellow
     Write-Host "========================================================`n" -ForegroundColor Red
     
+    Write-Host "Attempting to safely unmount image to prevent locked folders..." -ForegroundColor Cyan
+    if ($ScratchDisk -and (Test-Path "$ScratchDisk\scratchdir")) {
+        Dismount-WindowsImage -Path "$ScratchDisk\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
+        & dism.exe /Cleanup-Wim /ErrorAction SilentlyContinue | Out-Null
+    }
+
     # Pause for debugging before closing the console
     Write-Host "Press any key to exit..." -ForegroundColor Cyan
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

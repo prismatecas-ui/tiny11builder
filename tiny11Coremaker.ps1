@@ -1,4 +1,4 @@
-﻿param (
+param (
     [ValidatePattern('^[c-zC-Z]$')][string]$ISO,
     [ValidatePattern('^[c-zC-Z]$')][string]$SCRATCH,
     [switch]$RemoveCopilot,
@@ -22,6 +22,12 @@ trap {
     Write-Host "========================================================
 " -ForegroundColor Red
     
+    Write-Host "Attempting to safely unmount image to prevent locked folders..." -ForegroundColor Cyan
+    if ($ScratchDisk -and (Test-Path "$ScratchDisk\scratchdir")) {
+        & dism.exe /Unmount-Image /MountDir:"$ScratchDisk\scratchdir" /Discard /ErrorAction SilentlyContinue | Out-Null
+        & dism.exe /Cleanup-Wim /ErrorAction SilentlyContinue | Out-Null
+    }
+
     Write-Host "Press any key to exit..." -ForegroundColor Cyan
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit 1
@@ -110,6 +116,21 @@ try {
 catch {
     # This block will catch the error and suppress it.
 }
+
+if (Test-Path "$ScratchDisk\scratchdir") {
+    Write-Host "Cleaning up mount directory (scratchdir) from previous runs..." -ForegroundColor Yellow
+    
+    # Force an explicit dismount in case the system locked the folder
+    Dismount-WindowsImage -Path "$ScratchDisk\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
+    
+    # Try DISM cleanup first in case there's a stale mount
+    & dism.exe /Cleanup-Mountpoints | Out-Null
+    & dism.exe /Cleanup-Wim | Out-Null
+    
+    cmd.exe /c "rmdir /s /q `"$ScratchDisk\scratchdir`"" >null
+    if (Test-Path "$ScratchDisk\scratchdir") { Remove-Item -LiteralPath "\\?\$ScratchDisk\scratchdir" -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
 New-Item -ItemType Directory -Force -Path "$ScratchDisk\scratchdir" > $null
 & dism /English "/mount-image" "/imagefile:$($ScratchDisk)\tiny11\sources\install.wim" "/index:$index" "/mountdir:$($ScratchDisk)\scratchdir"
 
@@ -385,7 +406,10 @@ foreach ($dir in $dirsToCopy) {
 
 
 Write-Host "Deleting WinSxS. This may take a while..."
-Remove-Item -Path $ScratchDisk\scratchdir\Windows\WinSxS -Recurse -Force
+cmd.exe /c "rmdir /s /q `"$ScratchDisk\scratchdir\Windows\WinSxS`""
+if (Test-Path "$ScratchDisk\scratchdir\Windows\WinSxS") {
+    Remove-Item -LiteralPath "\\?\$ScratchDisk\scratchdir\Windows\WinSxS" -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 Rename-Item -Path $ScratchDisk\scratchdir\Windows\WinSxS_edit -NewName $ScratchDisk\scratchdir\Windows\WinSxS
 Write-Host "Complete!"
@@ -635,8 +659,10 @@ else {
 Write-Host "Creation completed! Press any key to exit the script..."
 
 Write-Host "Performing Cleanup..."
-Remove-Item -Path "$ScratchDisk\tiny11" -Recurse -Force >null
-Remove-Item -Path "$ScratchDisk\scratchdir" -Recurse -Force >null
+cmd.exe /c "rmdir /s /q `"$ScratchDisk\tiny11`"" >null
+if (Test-Path "$ScratchDisk\tiny11") { Remove-Item -LiteralPath "\\?\$ScratchDisk\tiny11" -Recurse -Force -ErrorAction SilentlyContinue >null }
+cmd.exe /c "rmdir /s /q `"$ScratchDisk\scratchdir`"" >null
+if (Test-Path "$ScratchDisk\scratchdir") { Remove-Item -LiteralPath "\\?\$ScratchDisk\scratchdir" -Recurse -Force -ErrorAction SilentlyContinue >null }
 
 # Stop the transcript
 Stop-Transcript
