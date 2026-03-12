@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Graphical interface for Tiny11Builder.
 .DESCRIPTION

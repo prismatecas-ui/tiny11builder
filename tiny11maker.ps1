@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Scripts to build a trimmed-down Windows 11 image.
 
