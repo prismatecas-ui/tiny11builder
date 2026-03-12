@@ -559,7 +559,7 @@ $BtnStart.Add_Click({
             # Use -Command with *>&1 to redirect ALL streams (including Write-Host stream 6)
             # to stdout, and force UTF8 encoding to avoid corrupted characters.
             $escapedPath = $scriptFullPath -replace "'", "''"
-            $psArgs = "-NoProfile -ExecutionPolicy Bypass -Command `"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$escapedPath' $scriptArgs *>&1`""
+            $psArgs = "-NoProfile -ExecutionPolicy Bypass -Command `"[Console]::OutputEncoding = [System.Text.Encoding]::Default; & '$escapedPath' $scriptArgs *>&1`""
             
             try {
                 $BtnStart.IsEnabled = $false
@@ -570,8 +570,8 @@ $BtnStart.Add_Click({
                 $psi.UseShellExecute = $false
                 $psi.RedirectStandardOutput = $true
                 $psi.RedirectStandardError = $true
-                $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-                $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+                $psi.StandardOutputEncoding = [System.Text.Encoding]::Default
+                $psi.StandardErrorEncoding = [System.Text.Encoding]::Default
                 $psi.CreateNoWindow = $true
 
                 $script:BuildProcess = New-Object System.Diagnostics.Process
