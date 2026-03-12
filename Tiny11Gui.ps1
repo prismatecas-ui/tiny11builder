@@ -1,21 +1,30 @@
-﻿<#
+<#
 .SYNOPSIS
-    Interface gráfica para o Tiny11Builder.
+    Graphical interface for Tiny11Builder.
 .DESCRIPTION
-    Fornece uma GUI nativa em WPF elegante e responsiva para rodar scripts do Tiny11 (DISM) de forma limpa, permitindo seleção granular de bloatwares e idiomas dinâmicos.
+    Provides an elegant and responsive native WPF GUI to run Tiny11 scripts (DISM) cleanly, allowing for granular bloatware selection and dynamic languages.
 #>
 # Requires -RunAsAdministrator
 [CmdletBinding()]
 param()
 
-# Auto-Elevação (Garante que o script rode como Administrador)
+# Unblock all scripts in the folder to remove the 'downloaded from internet' mark.
+# This eliminates the '[D] Do not run / [R] Run once' security prompt in any language.
+Get-ChildItem -Path "$PSScriptRoot\*.ps1" | Unblock-File -ErrorAction SilentlyContinue
+
+# Auto-Elevation (Ensures the script runs as Administrator with ExecutionPolicy Bypass)
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    # Uses -ExecutionPolicy Bypass and Unblock-File beforehand to ensure clean execution
     Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
 try {
     $ErrorActionPreference = "Stop"
+    # Force UTF8 encoding in the parent console to read logs correctly
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
     
     # Load Basic Assemblies
     Add-Type -AssemblyName System.Windows.Forms
@@ -29,7 +38,7 @@ try {
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # ==========================================
-# 0. Sistema de Localização (i18n)
+# 0. Localization System (i18n)
 # ==========================================
 $SysLang = [System.Globalization.CultureInfo]::CurrentUICulture.Name
 $IsPT = $SysLang -match '^pt'
@@ -84,7 +93,7 @@ function Get-AppName {
 }
 
 # ==========================================
-# 0.1 Base de Dados Viva (Global)
+# 0.1 Live Database (Global)
 # ==========================================
 $Global:AppPackages = @(
     # Games
@@ -167,7 +176,7 @@ $Global:AppPackages = @(
 )
 
 # ==========================================
-# 1. Definir o Design da Janela em XAML
+# 1. Define Window Design in XAML
 # ==========================================
 [xml]$XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -280,7 +289,7 @@ $Global:AppPackages = @(
 $Reader = (New-Object System.Xml.XmlNodeReader $xaml)
 $script:Window = [Windows.Markup.XamlReader]::Load($Reader)
 
-# UI Elements
+# UI Elements Mapping
 $ComboScript = $script:Window.FindName("ComboScript")
 $ComboDrives = $script:Window.FindName("ComboDrives")
 $ComboIndex = $script:Window.FindName("ComboIndex")
@@ -423,7 +432,7 @@ function Sync-GlobalToCategoryUI {
         }
     }
     catch {
-        Write-Output "Erro no Sync-Global: $($_.Exception.Message)" | Out-File "$PSScriptRoot\error_gui.txt" -Append
+        Write-Output "Error in Sync-Global: $($_.Exception.Message)" | Out-File "$PSScriptRoot\error_gui.txt" -Append
     }
 }
 
@@ -437,7 +446,7 @@ $ChkCatDev.Add_Click({ Sync-CategoryToGlobal 'Dev' $ChkCatDev.IsChecked })
 $ChkCatSys.Add_Click({ Sync-CategoryToGlobal 'Sys' $ChkCatSys.IsChecked })
 $ChkCatProd.Add_Click({ Sync-CategoryToGlobal 'Prod' $ChkCatProd.IsChecked })
 
-$BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Limpo." })
+$BtnClear.Add_Click({ $LogBox.Text = ""; Write-Log "Console Cleared." })
 $BtnExit.Add_Click({ $script:Window.Close() })
 
 $BtnListaBloatware.Add_Click({
@@ -520,16 +529,16 @@ $BtnStart.Add_Click({
         $BuildDir = Join-Path $ScriptDir "build"
         if (-not (Test-Path $BuildDir)) { New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null }
         
-        # Generation apps_to_remove.txt
+        # Generate apps_to_remove.txt
         $removeFile = Join-Path $BuildDir "apps_to_remove.txt"
         $Global:AppPackages | Where-Object { $_.Remove } | Select-Object -ExpandProperty Id | Out-File -FilePath $removeFile -Encoding UTF8
     
         $scriptArgs += " -AppListFile `"$removeFile`""
 
         Write-Log "---------------------------------------------"
-        Write-Log "[INFO] Limpando pasta de compilação anterior ($PSScriptRoot\build) se existir..."
+        Write-Log "[INFO] Cleaning previous build folder ($PSScriptRoot\build) if it exists..."
         if (Test-Path "$PSScriptRoot\build\scratchdir") {
-            Write-Log "[INFO] Forçando desmontagem de imagem WIM presa de execução anterior..."
+            Write-Log "[INFO] Forcing unmount of stuck WIM image from previous run..."
             Dismount-WindowsImage -Path "$PSScriptRoot\build\scratchdir" -Discard -ErrorAction SilentlyContinue | Out-Null
             & dism.exe /Cleanup-Mountpoints | Out-Null
             & dism.exe /Cleanup-Wim | Out-Null
@@ -547,7 +556,11 @@ $BtnStart.Add_Click({
             Write-Log "Build Engine: $TargetScript"
             
             $scriptFullPath = Join-Path $ScriptDir $TargetScript
-            $psArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptFullPath`" $scriptArgs"
+            # Use -Command with *>&1 to redirect ALL streams (including Write-Host stream 6)
+            # to stdout, and force UTF8 encoding to avoid corrupted characters.
+            $escapedPath = $scriptFullPath -replace "'", "''"
+            $psArgs = "-NoProfile -ExecutionPolicy Bypass -Command `"[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; & '$escapedPath' $scriptArgs *>&1`""
+            
             try {
                 $BtnStart.IsEnabled = $false
 
@@ -557,62 +570,31 @@ $BtnStart.Add_Click({
                 $psi.UseShellExecute = $false
                 $psi.RedirectStandardOutput = $true
                 $psi.RedirectStandardError = $true
+                $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+                $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
                 $psi.CreateNoWindow = $true
 
                 $script:BuildProcess = New-Object System.Diagnostics.Process
                 $script:BuildProcess.StartInfo = $psi
                 
                 $script:BuildProcess.Start() | Out-Null
-                $script:OutTask = $script:BuildProcess.StandardOutput.ReadLineAsync()
-                $script:ErrTask = $script:BuildProcess.StandardError.ReadLineAsync()
                 
                 $script:LogTimer = New-Object System.Windows.Threading.DispatcherTimer
-                $script:LogTimer.Interval = [TimeSpan]::FromMilliseconds(100)
+                $script:LogTimer.Interval = [TimeSpan]::FromMilliseconds(50)
                 $script:LogTimer.Add_Tick({
-                        if ($script:OutTask -and $script:OutTask.IsCompleted) {
-                            $line = $script:OutTask.Result
+                        # Read all available output from the buffer at once
+                        while (-not $script:BuildProcess.StandardOutput.EndOfStream) {
+                            $line = $script:BuildProcess.StandardOutput.ReadLine()
                             if ($null -ne $line) {
                                 $timestamp = (Get-Date).ToString("HH:mm:ss")
                                 $LogBox.AppendText("[$timestamp] $line`r`n")
                                 $LogBox.ScrollToEnd()
-                                $script:OutTask = $script:BuildProcess.StandardOutput.ReadLineAsync()
                             }
-                            else {
-                                $script:OutTask = $null
-                            }
-                        }
-                        if ($script:ErrTask -and $script:ErrTask.IsCompleted) {
-                            $line = $script:ErrTask.Result
-                            if ($null -ne $line) {
-                                $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                $LogBox.AppendText("[$timestamp] [!] $line`r`n")
-                                $LogBox.ScrollToEnd()
-                                $script:ErrTask = $script:BuildProcess.StandardError.ReadLineAsync()
-                            }
-                            else {
-                                $script:ErrTask = $null
-                            }
+                            # Minor break to prevent UI freezing if there is TOO MUCH log
+                            [System.Windows.Forms.Application]::DoEvents()
                         }
                     
                         if ($script:BuildProcess.HasExited) {
-                            # Add one last check just in case IsCompleted wasn't caught in the last tick
-                            if ($script:OutTask -and $script:OutTask.IsCompleted) {
-                                $line = $script:OutTask.Result
-                                if ($null -ne $line) {
-                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                    $LogBox.AppendText("[$timestamp] $line`r`n")
-                                    $LogBox.ScrollToEnd()
-                                }
-                            }
-                            if ($script:ErrTask -and $script:ErrTask.IsCompleted) {
-                                $line = $script:ErrTask.Result
-                                if ($null -ne $line) {
-                                    $timestamp = (Get-Date).ToString("HH:mm:ss")
-                                    $LogBox.AppendText("[$timestamp] [!] $line`r`n")
-                                    $LogBox.ScrollToEnd()
-                                }
-                            }
-
                             $script:LogTimer.Stop()
                             $code = $script:BuildProcess.ExitCode
                             $timestamp = (Get-Date).ToString("HH:mm:ss")
@@ -630,7 +612,7 @@ $BtnStart.Add_Click({
                 Write-Log $Strings.MsgStarted
             }
             catch {
-                Write-Log "[ERRO/ERROR] $TargetScript failed to start: $_"
+                Write-Log "[ERROR] $TargetScript failed to start: $_"
                 $BtnStart.IsEnabled = $true
             }
         }
